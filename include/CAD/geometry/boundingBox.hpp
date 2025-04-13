@@ -11,7 +11,6 @@ namespace CAD{
             class Sphere;
             template <class T = float>
             class Box;
-
             template <class T = float>
             class BB{
                 public:

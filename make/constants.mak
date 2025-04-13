@@ -1,6 +1,6 @@
 PROJECT = CAD
-VERSION = 0.0.0a-0
-# Target to compile for. This can be: pi, pi5. For an updated list, see the ARRC documentation.
+VERSION = "\"0.0.0a-0\""
+# Target to compile for. This can be: arch.
 TARGET ?= arch
 # Compiler to be used. Also include the language and version, if required.
 COMPILER := g++ -std=c++17 -D DEBUG
