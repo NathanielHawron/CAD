@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>OOCADscript documentation</title>
+    </head>
+    <body>
+        <h1>OOCADscript documentation</h1>
+        <h2>Introduction</h2>
+        <p>
+            &nbsp;&nbsp;&nbsp;&nbsp;Object Oriented Computer Aided Design Script (OOCAD) is a domain specific language made for designing, simulating, and animating 3D models. It includes primative 3D shapes, extrusions and other 2D to 3D operations, CSG, fillet and chamfer tools, and thickened surfaces for generating 3D volumes.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;OOCAD is intended to be used with the CAD software, as it includes GUI elements to assist in generating and rendering the script. However, it is fully textual and human readable, so any text editor will work. Additionally, there is both a CLI and c++ API that can be used for rendering.<br>
+
+        </p>
+        <h2>Syntax</h2>
+        <p>
+            &nbsp;&nbsp;&nbsp;&nbsp;OOCAD uses the same comments as most popular languages: // for single line and /* */ for multiline.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Each statement must end with a semicolon, unless it ends in a curly bracket.<br>
+        </p>
+        <h2>Keywords</h2>
+        <table>
+            
+        </table>
+        <h3>if</h3>
+        <p>
+            
+        </p>
+        <h3>else</h3>
+        <p>
+
+        </p>
+        <h3>for</h3>
+        <p>
+
+        </p>
+        <h3>const</h3>
+        <p>
+
+        </p>
+        <h3>break</h3>
+        <p>
+
+        </p>
+        <h3>return</h3>
+        <p>
+
+        </p>
+        <h3>continue</h3>
+        <p>
+            
+        </p>
+        <h2 id="scopes">Scopes</h2>
+        <p>
+            &nbsp;&nbsp;&nbsp;&nbsp;A scope contains functions and variables. When a new scope is created, any previous scope's properties are still available, but not prioritized. For example, you can have two variables with the same name in different scopes, but the most recently declared one will be used.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;The global scope can be accessed using the variable "global", while the current scope can be accessed using "this". A scope has a reference to the previous scope, "this.parent" (null for global, since it is the last scope).<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;When a function is called, all non-global scopes temporarily dissappear, leaving only the new function scope and the global scope. Once the function returns, the prevous scope is restored.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;A Scope is also a datatype. This means a scope, or a subset of a scope, can be passed around as an argument to a function, or returned from a function. If a function has a scope return type, then the function's scope is implicitly returned by default.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;When a scope is copied (i.e. returned), it loses its properties by default. The scope can be marked as keep by default, by prepending a $ in front of the type. Properties can be marked for keeping using a $, or for not keeping using ~$. A variable can be brought from the previous scope, by assigning $ to it. A scope can be leaked by prepending a $.
+        </p>
+        <h2>Built-in types</h2>
+        <table>
+            
+        </table>
+        <h3>reference</h3>
+        <p>
+            A reference to another variable.
+        </p>
+        <h3>array</h3>
+        <p>
+            All of the following have an array variant, which allows multiple elements to be stored in a single variable. 
+        </p>
+        <h3>float</h3>
+        <p>
+            A double precision floating point number, with around 16 decimal digits.
+        </p>
+        <h3>int</h3>
+        <p>
+            A 32 bit integer.
+        </p>
+        <h3>string</h3>
+        <p>
+            A list of characters.
+        </p>
+        <h3>vec2</h3>
+        <p>
+            A vector of 2 floats.
+        </p>
+        <h3>vec3</h3>
+        <p>
+            A vector of 3 floats.
+        </p>
+        <h3>Mat2</h3>
+        <p>
+            A 2x2 matrix of floats.
+        </p>
+        <h3>Mat3</h3>
+        <p>
+            A 3x3 matrix of floats.
+        </p>
+        <h3>Mat4</h3>
+        <p>
+            A 4x4 matrix of floats.
+        </p>
+        <h3>Point</h3>
+        <p>
+            A point in 3D space. Used as references in sketches and assemblies.
+        </p>
+        <h3>Axis</h3>
+        <p>
+            A reference line in 3D, which can be used to generate planes.
+        </p>
+        <h3>Line</h3>
+        <p>
+            A line in 3D space, which can be used as a path for sweep, or a reference in assemblies.
+        </p>
+        <h3>Plane</h3>
+        <p>
+            A reference plane, which can be used as a base for sketches. This is generally either axis aligned (XY, ZY, or XZ), or a flat face of a volume.
+        </p>
+        <h3>Interpolator</h3>
+        <p>
+            A function that interpolates between 2 or more points, with optional other parameters. This includes lerp (lines), bezier curves, hermite splines, arc segments, or any arbitrarily defined curve.
+        </p>
+        <h3>Edge</h3>
+        <p>
+            Uses an interpolator to generate an edge between two points, with optional other parameters.
+        </p>
+        <h3>Sketch</h3>
+        <p>
+            A collection of edges, used as a base for extrusions and similar operations.
+        </p>
+        <h2>Built in functions</h2>
+        <h3>vec2 project(point, plane);</h3>
+        <p>
+
+        </p>
+        <h2>Operators</h2>
+        <p>Note that these are the primary use for these operators, but they can be used for other purposes.</p>
+        <h3>Numerical</h3>
+        <p>
+            +, -, *, /, %, **<br>
+            Standard numerical operators: add, subtrct, multiply, divide, modulo (remainder), exponentiate
+        </p>
+        <h3>Boolean</h3>
+        <p>
+            ==, ~=, !=, &lt;, &gt;, &lt;=, &gt;=, &&, ||, !<br>
+            Standard boolean operators: equals, fuzzy equals (almost equals), not equals, less than, greater than, less than or equal to, greater than or equal to, and, or, not
+        </p>
+        <h3>Bitwise</h3>
+        <p>
+            ^, &, |, ~, &lt;&lt;, &gt;&gt;<br>
+            Standard bitwise operators: xor, and, or, invert, bitshift left, bitshift right
+        </p>
+        <h3>Assignment</h3>
+        <p>
+            =, ?=, ++, --<br>
+            Sets the value of a variable. Any of the previous operators, except boolean, can be used before an equal sign (=) on numerical types to reassign the new value.<br>
+            Conditional assignment (?=) assigns only if the variable is null or undefined. Pre increment (++x) increments x, post increment (x++) increments x but returns the previous value, and decrement operators (--x and x--) work the same.
+        </p>
+        <h3>Dimensional</h3>
+        <p>
+            mm, cm, dm, m, dam, hm, km, in, ft, yd, deg, rad<br>
+            Dimensional operators must immediately follow a number. It will be converted to meters or radians, but will be displayed in the file's units.
+        </p>
+        <h3>Other</h3>
+        <p>
+            ., ?, &lt;-, -&gt;, [], (), @, $<br>
+            Accessor operator (.) retreives a member of the variable (like a function or property). Conditional operator (?) assigns the right value if the left value is null or undefined. &lt;- and -&gt; may be used in the future. Array accessor ([]) is used to retreive an element of an array, starting from index 0. Call operator (()) is used to call a function, but may be used for a replacement constructor. Metadata operator (@) is used to define file properties, like default units and resolution. Import/Export operator ($) is used to import or export a variable, see <a href="#scopes">scopes</a> section for more details</a>
+        </p>
+        <h3>Order of operations</h3>
+        <p>
+            From first to last evaluation:
+            Anything in brackets goes first
+        </p>
+    </body>
+</html>

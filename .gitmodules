@@ -1,6 +1,3 @@
-[submodule "main/visualizer/submodules/imgui"]
-	path = main/visualizer/submodules/imgui
-	url = git@github.com:ocornut/imgui.git
-[submodule "main/visualizer/submodules/glfw"]
-	path = main/visualizer/submodules/glfw
-	url = https://github.com/glfw/glfw.git
+[submodule "submodule/splinekit"]
+	path = submodule/splinekit
+	url = git@github.com:NathanielHawron/splinekit.git
