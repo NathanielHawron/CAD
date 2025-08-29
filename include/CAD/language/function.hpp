@@ -7,8 +7,6 @@
 
 namespace CAD{
     namespace language{
-        class Sketch{
-            std::vector<general::vec2> points;
-        };
+        
     }
 }

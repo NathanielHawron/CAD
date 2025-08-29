@@ -8,7 +8,7 @@
 namespace CAD{
     namespace general{
         template <class T, int D>
-        struct mat{};
+        struct matT;
 
         template <class T, int D>
         struct vecT{

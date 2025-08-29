@@ -2,8 +2,8 @@
 
 namespace CAD{
     namespace language{
-        class Instruction{
-
+        enum class OPCODE : uint32_t{
+            
         };
     }
 }

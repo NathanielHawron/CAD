@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>OOCADscript documentation</title>
+        <title>OOCADscript documentation v0.0.2-a</title>
     </head>
     <body>
-        <h1>OOCADscript documentation</h1>
+        <h1>OOCADscript documentation (v0.0.2-a)</h1>
         <h2>Introduction</h2>
         <p>
-            &nbsp;&nbsp;&nbsp;&nbsp;Object Oriented Computer Aided Design Script (OOCAD) is a domain specific language made for designing, simulating, and animating 3D models. It includes primative 3D shapes, extrusions and other 2D to 3D operations, CSG, fillet and chamfer tools, and thickened surfaces for generating 3D volumes.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Object Oriented Computer Aided Design Script (OOCAD) is a domain specific language made for designing, simulating, and animating 3D models. It includes primitive 3D shapes, extrusions and other 2D to 3D operations, CSG, fillet and chamfer tools, and thickened surfaces for generating 3D volumes.<br>
             &nbsp;&nbsp;&nbsp;&nbsp;OOCAD is intended to be used with the CAD software, as it includes GUI elements to assist in generating and rendering the script. However, it is fully textual and human readable, so any text editor will work. Additionally, there is both a CLI and c++ API that can be used for rendering.<br>
 
         </p>
@@ -52,9 +52,9 @@
         <p>
             &nbsp;&nbsp;&nbsp;&nbsp;A scope contains functions and variables. When a new scope is created, any previous scope's properties are still available, but not prioritized. For example, you can have two variables with the same name in different scopes, but the most recently declared one will be used.<br>
             &nbsp;&nbsp;&nbsp;&nbsp;The global scope can be accessed using the variable "global", while the current scope can be accessed using "this". A scope has a reference to the previous scope, "this.parent" (null for global, since it is the last scope).<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;When a function is called, all non-global scopes temporarily dissappear, leaving only the new function scope and the global scope. Once the function returns, the prevous scope is restored.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;When a function is called, all non-global scopes temporarily disappear, leaving only the new function scope and the global scope. Once the function returns, the prevous scope is restored.<br>
             &nbsp;&nbsp;&nbsp;&nbsp;A Scope is also a datatype. This means a scope, or a subset of a scope, can be passed around as an argument to a function, or returned from a function. If a function has a scope return type, then the function's scope is implicitly returned by default.<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;When a scope is copied (i.e. returned), it loses its properties by default. The scope can be marked as keep by default, by prepending a $ in front of the type. Properties can be marked for keeping using a $, or for not keeping using ~$. A variable can be brought from the previous scope, by assigning $ to it. A scope can be leaked by prepending a $.
+            &nbsp;&nbsp;&nbsp;&nbsp;The $ operator ($variable_name) can be used to attempt to import a variable from a parent scope (Note that in a function, the parent is the global scope). When used in front of a variable declaration (type $variableName), it marks the variable for export (when the scope is returned, all non-marked variables are deleted). Prepending the scope type with $ ($scope) will make it export by default, requiring ~$ to unmark a variable for export. Note that the global scope gets saved to a file, using these export rules.
         </p>
         <h2>Built-in types</h2>
         <table>
@@ -122,11 +122,15 @@
         </p>
         <h3>Edge</h3>
         <p>
-            Uses an interpolator to generate an edge between two points, with optional other parameters.
+            A straight line between two points. Uses points from a sketch, referenced by index.
+        </p>
+        <h3>CenterArc</h3>
+        <p>
+            An arc generated using a center point (from a sketch), a start and end angle (counter clockwise from the +x axis), and a radius.
         </p>
         <h3>Sketch</h3>
         <p>
-            A collection of edges, used as a base for extrusions and similar operations.
+            A collection of points and edges, used as a base for extrusions and other operations.
         </p>
         <h2>Built in functions</h2>
         <h3>vec2 project(point, plane);</h3>
@@ -138,12 +142,12 @@
         <h3>Numerical</h3>
         <p>
             +, -, *, /, %, **<br>
-            Standard numerical operators: add, subtrct, multiply, divide, modulo (remainder), exponentiate
+            Standard numerical operators: add, subtract, multiply, divide, modulo (remainder), exponentiate
         </p>
         <h3>Boolean</h3>
         <p>
-            ==, ~=, !=, &lt;, &gt;, &lt;=, &gt;=, &&, ||, !<br>
-            Standard boolean operators: equals, fuzzy equals (almost equals), not equals, less than, greater than, less than or equal to, greater than or equal to, and, or, not
+            ==, ===, ~==, !=, &lt;, &gt;, &lt;=, &gt;=, &&, ||, !<br>
+            Standard boolean operators: equals (value), equals (reference), fuzzy equals (almost equals), not equals, less than, greater than, less than or equal to, greater than or equal to, and, or, not
         </p>
         <h3>Bitwise</h3>
         <p>
@@ -154,7 +158,7 @@
         <p>
             =, ?=, ++, --<br>
             Sets the value of a variable. Any of the previous operators, except boolean, can be used before an equal sign (=) on numerical types to reassign the new value.<br>
-            Conditional assignment (?=) assigns only if the variable is null or undefined. Pre increment (++x) increments x, post increment (x++) increments x but returns the previous value, and decrement operators (--x and x--) work the same.
+            Conditional assignment left (?=) assigns only if the variable is null or undefined, and right (=?) assigns only if the value is not null or undefined. Pre increment (++x) increments x, post increment (x++) increments x but returns the previous value, and decrement operators (--x and x--) work the same.
         </p>
         <h3>Dimensional</h3>
         <p>
@@ -163,8 +167,8 @@
         </p>
         <h3>Other</h3>
         <p>
-            ., ?, &lt;-, -&gt;, [], (), @, $<br>
-            Accessor operator (.) retreives a member of the variable (like a function or property). Conditional operator (?) assigns the right value if the left value is null or undefined. &lt;- and -&gt; may be used in the future. Array accessor ([]) is used to retreive an element of an array, starting from index 0. Call operator (()) is used to call a function, but may be used for a replacement constructor. Metadata operator (@) is used to define file properties, like default units and resolution. Import/Export operator ($) is used to import or export a variable, see <a href="#scopes">scopes</a> section for more details</a>
+            ., ?, &lt;-, -&gt;, [], (), @, $, &, ||, ? :<br>
+            Accessor operator (.) retrieves a member of the variable (like a function or property). Conditional operator (?) assigns the right value if the left value is null or undefined. &lt;- and -&gt; may be used in the future. Array accessor ([]) is used to retrieve an element of an array, starting from index 0. Call operator (()) is used to call a function, but may be used for a replacement constructor. Metadata operator (@) is used to define file properties, like default units and resolution. Import/Export operator ($) is used to import or export a variable, see <a href="#scopes">scopes</a> section for more details</a>. & is used to pass by reference. || is the same as ??, but discards falsey values rather than invalid values. Ternary (NYI) (bool ? x : y) returns x if bool is true, otherwise y.
         </p>
         <h3>Order of operations</h3>
         <p>

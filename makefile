@@ -8,6 +8,7 @@ reseto:
 	-@rm ./.o/$(TARGET)/* -r
 	-@mkdir ./.o/$(TARGET)/general
 	-@mkdir ./.o/$(TARGET)/geometry
+	-@mkdir ./.o/$(TARGET)/language
 
 
 buildo_g1: $(patsubst ./src/general/%.cpp, ./.o/$(TARGET)/general/%.o, $(wildcard ./src/general/*.cpp))
@@ -27,7 +28,14 @@ buildo_v1: $(patsubst ./src/visualizer/%.cpp, ./.o/$(TARGET)/visualizer/%.o, $(w
 	-@echo -e "${GREEN}Building visualizer objects${CYAN}"
 	$(COMPILER) $< -o $@ -c $(INCLUDE) -D VERSION=$(VERSION)
 	@echo -e "${GREEN}Built visualizer objects${NOCOLOR}"
-buildo: reseto buildo_g1 buildo_g2 buildo_v1
+
+buildo_l1: $(patsubst ./src/language/%.cpp, ./.o/$(TARGET)/language/%.o, $(wildcard ./src/language/*.cpp))
+./.o/$(TARGET)/language/%.o: ./src/language/%.cpp
+	-@echo -e "${GREEN}Building language objects${CYAN}"
+	$(COMPILER) $< -o $@ -c $(INCLUDE) -D VERSION=$(VERSION)
+	@echo -e "${GREEN}Built language objects${NOCOLOR}"
+
+buildo: reseto buildo_g1 buildo_g2 buildo_v1 buildo_l1
 
 # Build library. If project is not a library, this can be blank.
 build: ./lib/$(PROJECT)_$(TARGET).a
