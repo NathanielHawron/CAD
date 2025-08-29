@@ -5,5 +5,8 @@ namespace CAD{
         enum class OPCODE : uint32_t{
             
         };
+        class Instruction{
+
+        };
     }
 }

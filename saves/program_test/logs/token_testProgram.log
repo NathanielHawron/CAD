@@ -3,53 +3,65 @@ WORD (0): testFunction
 LBRACKET (0): (
 RBRACKET (0): )
 LBRACKET (0): {
+WORD (0): 
 WORD (1): int
 WORD (1): res
 SYMBOL (1): =
 NUMBER (1): b1001
 NUMBER (1): 0
+WORD (1): 
 WORD (2): return
 WORD (2): res
 BREAK (2): ;
+WORD (2): 
 RBRACKET (3): }
+WORD (3): 
+WORD (4): 
 WORD (5): int
 WORD (5): binaryNumber
 SYMBOL (5): =
 NUMBER (5): b0101010
 NUMBER (5): 0
+WORD (5): 
 WORD (6): int
 WORD (6): hexNumber
 SYMBOL (6): =
 NUMBER (6): x0123456789AABBCCDDEEFF
 NUMBER (6): 0
+WORD (6): 
 WORD (7): int
 WORD (7): x
 SYMBOL (7): =
 NUMBER (7): 0
 BREAK (7): ;
+WORD (7): 
 WORD (8): string
 WORD (8): str
 SYMBOL (8): =
 STRING (8): testing'n 
 	\;,.0.02-=+:|"<>?()[]{}_!@#$%^&*~`
 BREAK (8): ;
+WORD (8): 
 WORD (9): string
 WORD (9): escapes
 SYMBOL (9): =
 STRING (9): \	
 "'?
 BREAK (9): ;
+WORD (9): 
 WORD (10): string
 WORD (10): strSQ
 SYMBOL (10): =
 STRING (10): string with " single quotes and escapes ''\
 BREAK (10): ;
+WORD (10): 
 WORD (13): int
 WORD (13): y
 SYMBOL (13): =
 SYMBOL (13): &
 WORD (13): x
 BREAK (13): ;
+WORD (13): 
 WORD (14): int
 WORD (14): z
 SYMBOL (14): =
@@ -61,10 +73,12 @@ RBRACKET (14): )
 SYMBOL (14): **
 NUMBER (14): 2
 BREAK (14): ;
+WORD (14): 
 WORD (15): z
 SYMBOL (15): /=
 NUMBER (15): 10
 BREAK (15): ;
+WORD (15): 
 WORD (16): const
 WORD (16): float
 WORD (16): testFloat
@@ -73,28 +87,37 @@ NUMBER (16): 5.012
 SYMBOL (16): /
 NUMBER (16): 3.19
 BREAK (16): ;
+WORD (16): 
 LBRACKET (17): {
+WORD (17): 
 WORD (18): x
 SYMBOL (18): ==
 WORD (18): y
 BREAK (18): ;
+WORD (18): 
 WORD (19): x
 SYMBOL (19): !==
 WORD (19): y
 BREAK (19): ;
+WORD (19): 
 WORD (20): x
 SYMBOL (20): ~==
 WORD (20): y
 BREAK (20): ;
+WORD (20): 
 WORD (21): y
 SYMBOL (21): ===
 WORD (21): z
 BREAK (21): ;
+WORD (21): 
 WORD (22): z
 SYMBOL (22): !~=
 WORD (22): y
 BREAK (22): ;
+WORD (22): 
 RBRACKET (23): }
+WORD (23): 
+WORD (26): 
 WORD (27): test_function_call
 LBRACKET (27): (
 WORD (27): x
@@ -111,6 +134,7 @@ SYMBOL (27): +
 NUMBER (27): 1
 RBRACKET (27): )
 BREAK (27): ;
+WORD (27): 
 WORD (28): float
 WORD (28): arrTest
 LBRACKET (28): [
@@ -126,6 +150,7 @@ SYMBOL (28): *
 NUMBER (28): 2
 RBRACKET (28): }
 BREAK (28): ;
+WORD (28): 
 WORD (29): arrTest
 LBRACKET (29): [
 NUMBER (29): 0
@@ -133,12 +158,14 @@ BREAK (29): ,
 NUMBER (29): 1
 RBRACKET (29): ]
 BREAK (29): ;
+WORD (29): 
 WORD (30): arrTest
 LBRACKET (30): [
 SYMBOL (30): -
 NUMBER (30): 1
 RBRACKET (30): ]
 BREAK (30): ;
+WORD (30): 
 WORD (31): if
 LBRACKET (31): (
 NUMBER (31): 1
@@ -146,9 +173,12 @@ SYMBOL (31): ~==
 NUMBER (31): 1.000000001
 RBRACKET (31): )
 LBRACKET (31): {
+WORD (31): 
 WORD (32): break
 BREAK (32): ;
+WORD (32): 
 RBRACKET (33): }
+WORD (33): 
 WORD (34): for
 LBRACKET (34): (
 WORD (34): int
@@ -164,12 +194,16 @@ SYMBOL (34): ++
 WORD (34): i
 RBRACKET (34): )
 LBRACKET (34): {
+WORD (34): 
+WORD (35): 
 RBRACKET (36): }
+WORD (36): 
 WORD (37): int
 WORD (37): i
 SYMBOL (37): =
 NUMBER (37): 30
 BREAK (37): ;
+WORD (37): 
 WORD (38): while
 LBRACKET (38): (
 SYMBOL (38): --
@@ -178,35 +212,48 @@ SYMBOL (38): >
 NUMBER (38): 0
 RBRACKET (38): )
 LBRACKET (38): {
+WORD (38): 
+WORD (39): 
 RBRACKET (40): }
+WORD (40): 
 WORD (41): scope
 WORD (41): scopeTest
 LBRACKET (41): {
+WORD (41): 
 WORD (42): if
 LBRACKET (42): (
 WORD (42): true
 RBRACKET (42): )
 LBRACKET (42): {
+WORD (42): 
 WORD (43): break
 LBRACKET (43): (
 WORD (43): scopeTest
 RBRACKET (43): )
 BREAK (43): ;
+WORD (43): 
 RBRACKET (44): }
+WORD (44): 
 RBRACKET (45): }
+WORD (45): 
 LBRACKET (46): {
+WORD (46): 
 WORD (47): int
 WORD (47): x
 SYMBOL (47): =
 NUMBER (47): 1
 BREAK (47): ;
+WORD (47): 
 LBRACKET (48): {
+WORD (48): 
 WORD (49): int
 WORD (49): x
 SYMBOL (49): =
 NUMBER (49): 2
 BREAK (49): ;
+WORD (49): 
 LBRACKET (50): {
+WORD (50): 
 WORD (51): int
 WORD (51): x
 SYMBOL (51): =
@@ -214,40 +261,51 @@ SYMBOL (51): &
 SYMBOL (51): $
 WORD (51): x
 BREAK (51): ;
+WORD (51): 
 WORD (52): break
 LBRACKET (52): (
 NUMBER (52): 2
 RBRACKET (52): )
 BREAK (52): ;
+WORD (52): 
 RBRACKET (53): }
+WORD (53): 
 RBRACKET (54): }
+WORD (54): 
 RBRACKET (55): }
+WORD (55): 
 WORD (56): scope
 WORD (56): scopeVarTest
 SYMBOL (56): =
 LBRACKET (56): {
+WORD (56): 
 WORD (57): int
 WORD (57): x
 SYMBOL (57): =
 NUMBER (57): 2
 BREAK (57): ;
+WORD (57): 
 WORD (58): int
 SYMBOL (58): $
 WORD (58): y
 SYMBOL (58): =
 NUMBER (58): 3
 BREAK (58): ;
+WORD (58): 
 RBRACKET (59): }
+WORD (59): 
 WORD (60): float
 SYMBOL (60): $
 WORD (60): superGlobalTest
 SYMBOL (60): =
 NUMBER (60): 5
 BREAK (60): ;
+WORD (60): 
 WORD (61): superGlobalTest
 SYMBOL (61): =
 NUMBER (61): 6
 BREAK (61): ;
+WORD (61): 
 WORD (62): float
 WORD (62): measurementTest
 SYMBOL (62): =
@@ -263,12 +321,14 @@ SYMBOL (62): -
 NUMBER (62): 10
 WORD (62): mm
 BREAK (62): ;
+WORD (62): 
 WORD (63): float
 WORD (63): negative
 SYMBOL (63): =
 SYMBOL (63): -
 NUMBER (63): 1
 BREAK (63): ;
+WORD (63): 
 WORD (64): float
 WORD (64): sub
 SYMBOL (64): =
