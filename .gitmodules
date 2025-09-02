@@ -1,3 +1,9 @@
 [submodule "submodule/splinekit"]
 	path = submodule/splinekit
 	url = git@github.com:NathanielHawron/splinekit.git
+[submodule "submodule/NRA_visionGL"]
+	path = submodule/NRA_visionGL
+	url = git@github.com:NathanielHawron/NRA_visionGL.git
+[submodule "submodule/imgui"]
+	path = submodule/imgui
+	url = git@github.com:ocornut/imgui.git
