@@ -1,4 +1,4 @@
 .bin
-./.o
+.o
 imgui.ini
 c_cpp_properties.json

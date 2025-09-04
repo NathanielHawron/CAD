@@ -16,6 +16,8 @@
 #include "NRA_visionGL/texture.h"
 #include "NRA_visionGL/frameBufferObject.h"
 
+#include "TextEditor.h"
+
 const int worldWidth = 10, worldHeight = 10;
 
 namespace TestControls{
@@ -66,7 +68,6 @@ int main(){
     ImGui_ImplOpenGL3_Init();
 
     // OpenGL options
-    glEnable(GL_ALPHA);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_CULL_FACE);
@@ -189,6 +190,8 @@ int main(){
 
     NRA::VGL::Texture worldTexture(worldImage);
 
+    TextEditor textEditor;
+
     while(!(window.shouldClose())){
         ++time;
         // Window update calls glfwPollEvents()
@@ -265,6 +268,32 @@ int main(){
         glViewport(0,0,800,800);
         glClearColor(0.0f, 0.5f, 0.8f, 1.0f);
 
+        ImGui::BeginMainMenuBar();
+        bool menuTest;
+        ImGui::MenuItem("Menu Test Item", "", &menuTest);
+        ImGui::EndMainMenuBar();
+
+        ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_MenuBar);
+
+        ImGui::BeginMenuBar();
+        ImGui::MenuItem("Save");
+        ImGui::MenuItem("Load");
+        ImGui::EndMenuBar();
+
+        ImVec2 editorSize = ImGui::GetContentRegionAvail();
+        textEditor.Render("Editor", editorSize);
+        ImGui::End();
+
+        ImGui::Begin("Model");
+        ImVec2 imageSize = ImVec2(minimapFBO.getWidth(), minimapFBO.getHeight());
+        ImGui::Image(
+            (ImTextureID)minimapFBO.getTEX(),
+            imageSize,
+            ImVec2(0,1),
+            ImVec2(1,0)
+        );
+        ImGui::End();
+
         // Render world
         worldTexture.bind(0);
         shader.bind();
@@ -273,13 +302,13 @@ int main(){
         renderable.bindBuffers();
         renderable.render();
 
-        // Render minimap
+        /*// Render minimap
         minimapFBO.bindTexture(0);
         minimapShader.bind();
         minimapShader.setUniformMat<4>("U_vpMat", &guiMat[0][0]);
         minimapShader.setUniformMat<4>("U_mMat", &minimapPosMat[0][0]);
         minimap.bindBuffers();
-        minimap.render();
+        minimap.render();*/
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
