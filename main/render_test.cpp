@@ -18,7 +18,13 @@
 
 #include "TextEditor.h"
 
-const int worldWidth = 10, worldHeight = 10;
+const float worldWidth = 40, worldHeight = 40;
+const int worldStepsX = 40, worldStepsY = 40;
+const std::vector<std::pair<float,float>> waves = {
+    {3.1415f*0.1f , 3.0f },
+    {3.1415f*0.15f,-1.5f },
+    {3.1415f*0.19f, 0.75f},
+};
 
 namespace TestControls{
     // First block (0 - 31):    Movement
@@ -56,9 +62,10 @@ int main(){
         controlsList.emplace_back(ControlsInit{ButtonType::KEY,GLFW_KEY_LEFT_SHIFT, down});
         controlsList.emplace_back(ControlsInit{ButtonType::KEY,GLFW_KEY_ESCAPE,     pause});
     }
+    const GLFWvidmode *vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
     NRA::VGL::Window window(800,800,"NRA vision GL test",controlsList);
-    NRA::VGL::FBO minimapFBO(400,400);
+    NRA::VGL::FBO minimapFBO(vidMode->width,vidMode->height);
     NRA::VGL::Controls &controls = window.getControls();
     window.makeCurrent();
     window.swapInterval(1);
@@ -66,9 +73,11 @@ int main(){
     // Setup ImGui backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
     // OpenGL options
     glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
@@ -109,22 +118,84 @@ int main(){
         GLfloat norm[3];
     };
 
-    vertex positions[3*2*worldWidth*worldHeight];
-    for(int x=0;x<worldWidth;++x){
-        for(int y=0;y<worldHeight;++y){
-            int i = x*worldHeight + y;
-            positions[i*6] =   {{(float)x-4.5f       ,std::sinf(x-4.5f)*std::sin(y-4.5f), (float)y-4.5f},       {0.0f, 0.0}, {0,1,0}};
-            positions[i*6+1] = {{(float)x+1.0f-4.5f  ,std::sinf(x-3.5f)*std::sin(y-4.5f), (float)y-4.5f},       {1.0f, 0.0f},{0,1,0}};
-            positions[i*6+2] = {{(float)x+0.5f-4.5f  ,std::sinf(x-4.0f)*std::sin(y-3.5f), (float)y+1.0f-4.5f},  {0.5f, 0.5f},{0,1,0}};
+    vertex positions[3*2*worldStepsX*worldStepsY];
+    for(int x=0;x<worldStepsX;++x){
+        float dx = worldWidth / worldStepsX;
+        float dy = worldHeight / worldStepsY;
+        float dtx = 1.0f/worldStepsX;
+        float dty = 1.0f/worldStepsY;
 
-            positions[i*6+3] = {{(float)x+1.5f-4.5f  ,std::sinf(x-3.0f)*std::sin(y-3.5f), (float)y+1.0f-4.5f},  {1.0f,1.0f}, {0,1,0}};
-            positions[i*6+4] = {{(float)x+0.5f-4.5f  ,std::sinf(x-4.0f)*std::sin(y-3.5f), (float)y+1.0f-4.5f},  {0.0f,1.0f}, {0,1,0}};
-            positions[i*6+5] = {{(float)x+1.0f-4.5f  ,std::sinf(x-3.5f)*std::sin(y-4.5f), (float)y-4.5f},       {0.5f,0.5f}, {0,1,0}};
+        for(int y=0;y<worldStepsY;++y){
+            int i = x*worldStepsY + y;
+
+            float rx = -worldWidth*0.5f + x*dx;
+            float ry = -worldHeight*0.5f + y*dy;
+
+            float tx = x * dtx;
+            float ty = y * dty;
+
+            float sx1 = 0.0f;
+            float sx2 = 0.0f;
+
+            float sy1 = 0.0f;
+            float sy2 = 0.0f;
+
+            float dsx1 = 0.0f;
+            float dsx2 = 0.0f;
+
+            float dsy1 = 0.0f;
+            float dsy2 = 0.0f;
+
+            for(const auto & wave : waves){
+                sx1 += std::sinf(wave.first*(rx))*wave.second;
+                sx2 += std::sinf(wave.first*(rx+dx))*wave.second;
+                sy1 += std::sinf(wave.first*(ry))*wave.second;
+                sy2 += std::sinf(wave.first*(ry+dy))*wave.second;
+
+                dsx1 += wave.first*std::cosf(wave.first*(rx))*wave.second;
+                dsx2 += wave.first*std::cosf(wave.first*(rx+dx))*wave.second;
+                dsy1 += wave.first*std::cosf(wave.first*(ry))*wave.second;
+                dsy2 += wave.first*std::cosf(wave.first*(ry+dy))*wave.second;
+            }
+
+            float h[4] = {
+                sx1*sy1,
+                sx2*sy1,
+                sx2*sy2,
+                sx1*sy2
+            };
+            float dhdx[4] = {
+                dsx1*sy1,
+                dsx2*sy1,
+                dsx2*sy2,
+                dsx1*sy2
+            };
+            float dhdy[4] = {
+                sx1*dsy1,
+                sx2*dsy1,
+                sx2*dsy2,
+                sx1*dsy2
+            };
+            float m[4];
+            for(int i=0;i<4;++i){
+                m[i] = std::sqrt(dhdx[i]*dhdx[i] + dhdy[i]*dhdy[i] + 1);
+                dhdx[i] /= m[i];
+                dhdy[i] /= m[i];
+                m[i] = 1/m[i];
+            }
+
+            positions[i*6]   = {{rx     ,h[0],   ry   }  ,{tx    ,ty    }    ,{dhdx[0],m[0],dhdy[0]}};
+            positions[i*6+1] = {{rx+dx  ,h[1],   ry   }  ,{tx+dtx,ty    }    ,{dhdx[1],m[1],dhdy[1]}};
+            positions[i*6+2] = {{rx     ,h[3],   ry+dy}  ,{tx    ,ty+dty}    ,{dhdx[3],m[3],dhdy[3]}};
+
+            positions[i*6+3] = {{rx     ,h[3],   ry+dy}  ,{tx    ,ty+dty}    ,{dhdx[3],m[3],dhdy[3]}};
+            positions[i*6+4] = {{rx+dx  ,h[1],   ry   }  ,{tx+dtx,ty    }    ,{dhdx[1],m[1],dhdy[1]}};
+            positions[i*6+5] = {{rx+dx  ,h[2],   ry+dy}  ,{tx+dtx,ty+dty}    ,{dhdx[2],m[2],dhdy[2]}};
         }
     }
     
-    GLuint indices[3*2*worldWidth*worldHeight];
-    for(int i=0;i<3*2*worldWidth*worldHeight;++i){
+    GLuint indices[3*2*worldStepsX*worldStepsY];
+    for(int i=0;i<3*2*worldStepsX*worldStepsY;++i){
         indices[i] = i;
     }
 
@@ -140,7 +211,7 @@ int main(){
     };
 
     Mesh_t mesh = Mesh_t(sizeof(vertex)/4);
-    mesh.add(positions,indices,3*2*worldWidth*worldHeight,3*2*worldWidth*worldHeight);
+    mesh.add(positions,indices,3*2*worldStepsX*worldStepsY,3*2*worldStepsX*worldStepsY);
     Mesh_t minimapMesh = Mesh_t(sizeof(vertex)/4);
     minimapMesh.add(minimapPositions,minimapIndices,4,6);
 
@@ -153,7 +224,7 @@ int main(){
     NRA::VGL::ProjectionParams projectionParams = {window.getAspect(), NRA::VGL::ProjectionParams::horizontalFOV(90.0f,window.getAspect())};
     NRA::VGL::Camera camera(glm::vec3(), glm::quat(), projectionParams, &cameraPos);
 
-    NRA::VGL::SpacialBase minimapCameraPos({0.0f,10.0f,0.0f},glm::quat(glm::vec3(-1.570796f,0.0f,0.0f)));
+    NRA::VGL::SpacialBase minimapCameraPos({0.0f,20.0f,0.0f},glm::quat(glm::vec3(-1.570796f,0.0f,0.0f)));
     NRA::VGL::ProjectionParams minimapProjectionParams = {window.getAspect(), NRA::VGL::ProjectionParams::horizontalFOV(90.0f,window.getAspect())};
     NRA::VGL::Camera minimapCamera(glm::vec3(), glm::quat(), projectionParams, &minimapCameraPos);
 
@@ -183,9 +254,9 @@ int main(){
     worldImage.buffer[10] = 255;
     worldImage.buffer[11] = 255;
 
-    worldImage.buffer[12] = 0;
-    worldImage.buffer[13] = 0;
-    worldImage.buffer[14] = 0;
+    worldImage.buffer[12] = 100;
+    worldImage.buffer[13] = 100;
+    worldImage.buffer[14] = 100;
     worldImage.buffer[15] = 255;
 
     NRA::VGL::Texture worldTexture(worldImage);
@@ -284,15 +355,20 @@ int main(){
         textEditor.Render("Editor", editorSize);
         ImGui::End();
 
-        ImGui::Begin("Model");
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+        ImGui::Begin("Model", nullptr, ImGuiWindowFlags_NoScrollbar);
         ImVec2 imageSize = ImVec2(minimapFBO.getWidth(), minimapFBO.getHeight());
+        ImVec2 windowSize = ImGui::GetContentRegionAvail();
+        ImVec2 dSize{imageSize.x-windowSize.x,imageSize.y-windowSize.y};
+        ImVec2 rdSize = {dSize.x / imageSize.x, dSize.y / imageSize.y};
         ImGui::Image(
-            (ImTextureID)minimapFBO.getTEX(),
-            imageSize,
-            ImVec2(0,1),
-            ImVec2(1,0)
+            (ImTextureID)minimapFBO.getTex(),
+            windowSize,
+            ImVec2(rdSize.x*0.5f,1.0f-rdSize.y*0.5f),
+            ImVec2(1.0f-rdSize.x*0.5f,rdSize.y*0.5f)
         );
         ImGui::End();
+        ImGui::PopStyleVar();
 
         // Render world
         worldTexture.bind(0);

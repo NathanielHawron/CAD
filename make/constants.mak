@@ -2,7 +2,7 @@ PROJECT = CAD
 # Target to compile for. This can be: ARCH, WINDOWS
 TARGET ?= ARCH
 # Compiler to be used. Also include the language and version, if required.
-COMPILER := g++ -std=c++17 -D DEBUG
+COMPILER := g++ -std=c++17
 # List of libraries to include. This can include local files (-L) or system files (-l).
 LIBRARY =  -L ./submodule/splinekit/lib/splinekit_RELEASE_$(TARGET).a ./submodule/NRA_visionGL/lib/libvision_lib_$(TARGET).a
 LIBRARY += -L ./lib
