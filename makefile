@@ -3,7 +3,6 @@ MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 include $(MAKEFILE_DIR)/make/colors.mak
 include $(MAKEFILE_DIR)/make/constants.mak
 include $(MAKEFILE_DIR)/make/imgui.mak
-include $(MAKEFILE_DIR)/make/ImGuiColorTextEditor.mak
 
 reseto:
 	-@mkdir ./.o/$(TARGET)

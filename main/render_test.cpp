@@ -16,8 +16,6 @@
 #include "NRA_visionGL/texture.h"
 #include "NRA_visionGL/frameBufferObject.h"
 
-#include "TextEditor.h"
-
 const float worldWidth = 40, worldHeight = 40;
 const int worldStepsX = 40, worldStepsY = 40;
 const std::vector<std::pair<float,float>> waves = {
@@ -261,8 +259,6 @@ int main(){
 
     NRA::VGL::Texture worldTexture(worldImage);
 
-    TextEditor textEditor;
-
     while(!(window.shouldClose())){
         ++time;
         // Window update calls glfwPollEvents()
@@ -343,17 +339,6 @@ int main(){
         bool menuTest;
         ImGui::MenuItem("Menu Test Item", "", &menuTest);
         ImGui::EndMainMenuBar();
-
-        ImGui::Begin("Code Editor", nullptr, ImGuiWindowFlags_MenuBar);
-
-        ImGui::BeginMenuBar();
-        ImGui::MenuItem("Save");
-        ImGui::MenuItem("Load");
-        ImGui::EndMenuBar();
-
-        ImVec2 editorSize = ImGui::GetContentRegionAvail();
-        textEditor.Render("Editor", editorSize);
-        ImGui::End();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
         ImGui::Begin("Model", nullptr, ImGuiWindowFlags_NoScrollbar);
