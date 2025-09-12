@@ -1,0 +1,10 @@
+#version 330 core
+
+layout(location = 0) in vec4 position;
+
+uniform mat4 U_vpMat;
+uniform mat4 U_mMat;
+
+void main() {
+	gl_Position = U_vpMat * U_mMat * position;
+};

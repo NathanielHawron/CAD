@@ -9,7 +9,7 @@ reseto:
 	-@rm ./.o/$(TARGET)/* -r
 	-@mkdir ./.o/$(TARGET)/general
 	-@mkdir ./.o/$(TARGET)/geometry
-	-@mkdir ./.o/$(TARGET)/renderer
+	-@mkdir ./.o/$(TARGET)/$(GUI)
 
 
 buildo_g1: $(patsubst ./src/general/%.cpp, ./.o/$(TARGET)/general/%.o, $(wildcard ./src/general/*.cpp))
@@ -23,27 +23,22 @@ buildo_g2: $(patsubst ./src/geometry/%.cpp, ./.o/$(TARGET)/geometry/%.o, $(wildc
 	-@echo -e "${GREEN}Building geometry objects${CYAN}"
 	$(COMPILER) $< -o $@ -c $(INCLUDE) -D VERSION=$(VERSION) $(ARGS)
 	@echo -e "${GREEN}Built geometry objects${NOCOLOR}"
-
-# buildo_l1: $(patsubst ./src/language/%.cpp, ./.o/$(TARGET)/language/%.o, $(wildcard ./src/language/*.cpp))
-# ./.o/$(TARGET)/language/%.o: ./src/language/%.cpp
-# 	-@echo -e "${GREEN}Building language objects${CYAN}"
-# 	$(COMPILER) $< -o $@ -c $(INCLUDE) -D VERSION=$(VERSION)
-#	@echo -e "${GREEN}Built language objects${NOCOLOR}"
-
-buildo_r1: $(patsubst ./src/renderer/%.cpp, ./.o/$(TARGET)/renderer/%.o, $(wildcard ./src/renderer/*.cpp))
-./.o/$(TARGET)/renderer/%.o: ./src/renderer/%.cpp
-	-@echo -e "${GREEN}Building renderer objects${CYAN}"
+	
+buildo_g3: $(patsubst $(GUI_SRC)/%.cpp, ./.o/$(TARGET)/$(GUI)/%.o, $(wildcard $(GUI_SRC)/*.cpp))
+./.o/$(TARGET)/$(GUI)/%.o: $(GUI_SRC)/%.cpp
+	-@echo -e "${GREEN}Building GUI ($(GUI)) objects${CYAN}"
 	$(COMPILER) $< -o $@ -c $(INCLUDE) -D VERSION=$(VERSION) $(ARGS)
-	@echo -e "${GREEN}Built renderer objects${NOCOLOR}"
+	@echo -e "${GREEN}Built GUI ($(GUI)) objects${NOCOLOR}"
 
-buildo: reseto buildo_g1 buildo_g2 buildo_r1
+buildo: reseto buildo_g1 buildo_g2 buildo_g3
 
 # Build library. If project is not a library, this can be blank.
 build: ./lib/$(PROJECT)_$(TARGET).a
 ./lib/$(PROJECT)_$(TARGET).a: buildo ./include/* ./src/*/*
 	-@echo -e "${GREEN}Archiving IPC Library${CYAN}"
 	-@rm ./lib/lib$(PROJECT)_$(TARGET).a
-	ar rvs ./lib/lib$(PROJECT)_$(TARGET).a ./.o/$(TARGET)/*/*
+	ar rvs ./lib/lib$(PROJECT)_$(TARGET).a ./.o/$(TARGET)/general/* ./.o/$(TARGET)/geometry/*
+	ar rvs ./lib/lib$(GUI)_$(TARGET).a ./.o/$(TARGET)/$(GUI)/*
 	-@echo -e "${GREEN}Archived IPC Library${NOCOLOR}"
 
 # Build main file.
@@ -52,7 +47,7 @@ build: ./lib/$(PROJECT)_$(TARGET).a
 buildm: ./.bin/$(PROGRAM)
 ./.bin/$(PROGRAM): ./main/$(PROGRAM).cpp ./.bin ./lib/$(PROJECT)_$(TARGET).a
 	@echo -e "${GREEN}Building '${PROGRAM}'${CYAN}"
-	$(COMPILER) $(INCLUDE) -o ./.bin/$(PROGRAM) ./main/$(PROGRAM).cpp $(LIBRARY) -I ./main -l$(PROJECT)_$(TARGET) $(ARGS)
+	$(COMPILER) $(INCLUDE) -o ./.bin/$(PROGRAM) ./main/$(PROGRAM).cpp -l$(GUI)_$(TARGET) -l$(PROJECT)_$(TARGET) $(LIBRARY) -I ./main $(ARGS)
 	@echo -e "${GREEN}Built '${PROGRAM}'${NOCOLOR}"
 
 # Run the executable file

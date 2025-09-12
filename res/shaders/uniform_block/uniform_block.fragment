@@ -1,0 +1,32 @@
+#version 450 core
+
+layout(location = 0) out vec4 color;
+
+uniform diskParameters{
+    vec4 innerColor;
+    vec4 outerColor;
+    float innerRadius;
+    float outerRadius;
+};
+
+subroutine vec3 lightingFunction();
+subroutine uniform lightingFunction shadingMode;
+
+vec3 flatLighting();
+vec3 ambientLighting();
+
+void main(){
+    float dx = 0;
+    float dy = 0;
+    float dist = sqrt(dx*dx + dy*dy);
+    color = mix(innerColor, outerColor, smoothstep(innerRadius, outerRadius, dist)) + vec4(shadingMode(), 0);
+};
+
+subroutine(lightingFunction)
+vec3 flatLighting(){
+    return vec3(-0.2,-0.2,-0.2);
+};
+subroutine(lightingFunction)
+vec3 ambientLighting(){
+    return vec3(0.1,0.2,0.2);
+};

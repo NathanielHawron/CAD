@@ -1,0 +1,18 @@
+v 0.5 -0.5 -0.5
+v -0.5 -0.5 \# a comment
+ -0.5 # lol
+ v 0.0   0.5 -0.5 \
+ 
+ vt 0.0 0.0
+ vn 0.0 0.0 0.0
+
+# comment 
+\
+# test # test2 \
+#\
+\#
+
+o triangle
+g triangleFace polygon
+
+f 1 2 3

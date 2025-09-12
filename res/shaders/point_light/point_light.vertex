@@ -1,0 +1,18 @@
+#version 330 core
+
+layout(location = 0) in vec4 v_position;
+layout(location = 1) in vec3 v_normal;
+
+out vec3 f_normal;
+out vec3 f_pos;
+
+uniform mat4 U_vpMat;
+uniform mat4 U_mMat;
+
+void main() {
+    vec4 world_pos = U_mMat * v_position;
+	gl_Position = U_vpMat * world_pos;
+
+    f_normal = normalize(mat3(transpose(inverse(U_mMat))) * v_normal);
+    f_pos = world_pos.xyz;
+}

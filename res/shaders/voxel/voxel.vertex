@@ -1,0 +1,17 @@
+#version 330 core
+
+layout(location = 0) in vec4 position;
+layout(location = 1) in vec2 texCoord;
+layout(location = 2) in vec4 col;
+
+out vec2 v_TexCoord;
+out vec3 v_color;
+
+uniform mat4 u_MVP;
+uniform vec3 u_ambient_light;
+
+void main() {
+	gl_Position = u_MVP * vec4(position.xyz,1);
+	v_TexCoord = texCoord;
+	v_color = vec3(col[0],col[1],col[2]) + (u_ambient_light*col[3]);
+};
