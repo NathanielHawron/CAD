@@ -14,6 +14,7 @@
 #include "NRA_visionGL/frameBufferObject.h"
 
 #include "CAD/gui/engine.hpp"
+#include "CAD/general/version.hpp"
 
 namespace TestControls{
     // First block (0 - 31):    Movement
@@ -44,7 +45,8 @@ namespace TestControls{
 };
 
 int main(){
-    std::cout << "NRA_visionGL test v" << (std::string)NRA_visionGL_VERSION << std::endl;
+    std::cout << "NRA_visionGL v" << (std::string)NRA_visionGL_VERSION << std::endl;
+    std::cout << "CAD " << (std::string)CAD::LIB_VERSION << std::endl;
 
     NRA::VGL::Window::init();
 
@@ -88,7 +90,8 @@ int main(){
 
     const GLFWvidmode *vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
-    NRA::VGL::Window window(800,800,"NRA vision GL test",controlsList);
+    std::string windowTitle = std::string("CAD test ") + (std::string)CAD::LIB_VERSION;
+    NRA::VGL::Window window(800,800,windowTitle.c_str(),controlsList);
     NRA::VGL::FBO minimapFBO(vidMode->width,vidMode->height);
     NRA::VGL::Controls &controls = window.getControls();
     window.makeCurrent();

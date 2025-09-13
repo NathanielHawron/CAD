@@ -88,6 +88,15 @@ namespace CAD{
                     }
                 }
             };
+            std::size_t calculateSize(){
+                if(this->empty){
+                    return 0;
+                }else if(this->endIndex > this->beginIndex){
+                    return this->endIndex - this->beginIndex;
+                }else{
+                    return this->size - this->beginIndex + this->endIndex;
+                }
+            };
 
             RingBufferIterator<T> begin(){return RingBufferIterator<T>{this,this->beginIndex};};
             RingBufferIterator<T> end(){return RingBufferIterator<T>{this,this->endIndex};};
