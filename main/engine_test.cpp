@@ -112,6 +112,8 @@ int main(){
 
     CAD::gui::EngineGUI engine{std::string{"Engine"}};
 
+    bool showAbout = false;
+
     while(!window.shouldClose()){
         window.reset();
         NRA::VGL::Window::update();
@@ -122,8 +124,9 @@ int main(){
         ImGui::NewFrame();
 
         ImGuiViewport *viewport = ImGui::GetMainViewport();
-        ImGui::SetNextWindowPos(viewport->Pos);
-        ImGui::SetNextWindowSize(viewport->Size);
+        
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
 
         ImGuiWindowFlags mainWindowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar \
@@ -136,8 +139,20 @@ int main(){
         ImGui::DockSpace(dockspaceID);
         ImGui::End();
 
-        ImGui::ShowDemoWindow();
+        ImGui::BeginMainMenuBar();
+        if(ImGui::BeginMenu("Info")){
+            ImGui::MenuItem("Documentation","",nullptr,true);
+            if(ImGui::MenuItem("About","",nullptr,true)){
+                showAbout = !showAbout;
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+
         engine.cliWindow();
+        if(showAbout){
+            engine.aboutWindow();
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
