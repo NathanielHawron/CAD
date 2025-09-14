@@ -41,9 +41,8 @@ void EngineGUI::cliWindow(){
     if(ImGui::InputText("Engine CLI prompt",this->promptBuffer,this->promptSize,ImGuiInputTextFlags_EnterReturnsTrue)){
         std::string temp = std::string(this->promptBuffer);
         auto coloredPrompt = this->parseColors(temp);
-        this->promptHistory.add(coloredPrompt);
+        this->promptHistory.push(coloredPrompt);
         this->cliCommand(this->filterColors(temp));
-        std::cout << this->filterColors(temp) << std::endl;
         memset(this->promptBuffer, '\0', this->promptSize);
     }
     std::string promptSizeCount = std::to_string(std::string(this->promptBuffer).size()) + "/" + std::to_string(this->promptSize-1);

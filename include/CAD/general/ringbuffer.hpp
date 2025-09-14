@@ -13,93 +13,91 @@ namespace CAD{
         struct RingBufferIterator{
         private:
             RingBuffer<T> *rb;
-            std::size_t index;
+            int index;
         public:
-            RingBufferIterator(RingBuffer<T> *rb, std::size_t index):rb{rb},index{index}{}
-            T operator*(){return this->rb->buff[this->index];};
+            RingBufferIterator(RingBuffer<T> *rb, int index):rb{rb},index{index}{}
+            T &operator*(){return this->rb->buff[(this->rb->beginIndex+this->index)%this->rb->maxElements];};
             void operator++(){
                 ++this->index;
-                if(this->index >= this->rb->size){
-                    this->index = 0;
-                }
             };
-            bool operator==(RingBufferIterator<T> &it){return this->index == it.index && this->rb == it.rb;};
-            bool operator!=(RingBufferIterator<T> &it){return this->index != it.index || this->rb != it.rb;};
+            void operator--(){
+                --this->index;
+            }
+            void operator+=(int di){
+                this->index += di;
+            }
+            void operator-=(int di){
+                this->index -= di;
+            }
+            bool operator==(const RingBufferIterator<T> &it) const {return this->index == it.index && this->rb == it.rb;};
+            bool operator!=(const RingBufferIterator<T> &it) const {return this->index != it.index || this->rb != it.rb;};
         };
 
         template <class T>
         class RingBuffer{
         friend RingBufferIterator<T>;
         private:
-            std::size_t size;
+            std::size_t maxElements;
             T *buff;
             // First element added
             std::size_t beginIndex;
-            // Latest element added
-            std::size_t endIndex;
-            bool empty;
+            // Number of filled elements
+            std::size_t elements;
         public:
-            RingBuffer(std::size_t size):size{size},buff{new T[this->size]},beginIndex{0},endIndex{0},empty{true}{};
+            RingBuffer(std::size_t size):maxElements{size},buff{new T[this->maxElements]},beginIndex{0},elements{0}{};
             ~RingBuffer(){delete[] this->buff;};
             void resize(std::size_t newSize){
                 T *temp = new T[newSize];
 
-                if(!this->empty){
-                    if(this->endIndex > this->beginIndex){
-                        std::size_t start = this->beginIndex;
-                        std::size_t count = this->endIndex - start;
-                        if(count > newSize){
-                            start += count-newSize;
-                            count = this->endIndex - start;
-                        }
-                        memcpy(temp, &this->buff[start], count*sizeof(T));
-                        this->endIndex = count;
-                    }else{
-                        std::size_t start = this->beginIndex;
-                        std::size_t count1 = this->size - start;
-                        std::size_t count2 = this->endIndex;
-                        std::size_t totalCount = count1 + count2;
-                        if(count1 >= newSize){
-                            totalCount = newSize;
-                            memcpy(temp, &this->buff[this->endIndex - newSize], totalCount * sizeof(T));
-                        }else if(totalCount >= newSize){
-                            memcpy(temp, &this->buff[this->beginIndex], (this->size-this->beginIndex)*sizeof(T));
-                            memcpy(&temp[this->size-this->beginIndex], this->buff, this->endIndex*sizeof(T));
-                        }
-                        this->endIndex = totalCount;
+                if(this->elements > 0){
+                    std::size_t index = 0;
+                    auto it = this->begin();
+                    if(newSize < this->elements){
+                        it += this->elements - newSize;
                     }
-                    this->beginIndex = 0;
+                    while(it != this->end()){
+                        temp[index++] = *it;
+                        ++it;
+                    }
+                    if(newSize < this->elements){
+                        this->elements = newSize;
+                    }
+                }else{
+                    // No copy necessary
                 }
-
-                this->size = newSize;
+                this->beginIndex = 0;
+                this->maxElements = newSize;
                 delete[] this->buff;
                 this->buff = temp;
             }
-            void add(T &element){
-                if(this->empty){
-                    this->empty = false;
-                    this->buff[0] = element;
-                    this->endIndex++;
+            void push(const T &element){
+                if(this->elements == this->maxElements){
+                    this->buff[this->beginIndex] = element;
+                    this->beginIndex = (this->beginIndex+1)%this->maxElements;
                 }else{
-                    this->buff[this->endIndex] = element;
-                    this->endIndex = (this->endIndex+1)%this->size;
-                    if(this->endIndex == this->beginIndex){
-                        this->beginIndex = (this->beginIndex+1)%this->size;
-                    }
+                    this->buff[(this->beginIndex+this->elements)%this->maxElements] = element;
+                    ++this->elements;
                 }
             };
-            std::size_t calculateSize(){
-                if(this->empty){
-                    return 0;
-                }else if(this->endIndex > this->beginIndex){
-                    return this->endIndex - this->beginIndex;
+            T pop(){
+                if(this->elements > 0){
+                    auto temp = this->beginIndex;
+                    this->beginIndex = (this->beginIndex+1)%this->maxElements;
+                    --this->elements;
+                    return temp;
                 }else{
-                    return this->size - this->beginIndex + this->endIndex;
+                    return {};
                 }
+            }
+            std::size_t size(){
+                return this->elements;
             };
 
-            RingBufferIterator<T> begin(){return RingBufferIterator<T>{this,this->beginIndex};};
-            RingBufferIterator<T> end(){return RingBufferIterator<T>{this,this->endIndex};};
+            RingBufferIterator<T> begin(){return RingBufferIterator<T>{this,0};};
+            RingBufferIterator<T> end(){return RingBufferIterator<T>{this,this->elements};};
+
+            RingBufferIterator<T> rbegin(){return RingBufferIterator<T>{this,this->elements-1};};
+            RingBufferIterator<T> rend(){return RingBufferIterator<T>{this,-1};};
         };
     }
 }

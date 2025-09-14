@@ -110,7 +110,7 @@ int main(){
     glCullFace(GL_FRONT);
     glClearColor(0.2f, 0.5f, 0.6f, 1.0f);
 
-    CAD::gui::EngineGUI engine{std::string{"Engine"}};
+    CAD::gui::EngineGUI engine{std::string{"Engine"}, 255, 5};
 
     bool showAbout = false;
 

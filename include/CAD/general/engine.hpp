@@ -49,6 +49,7 @@ namespace CAD{
             std::vector<std::pair<Color, std::string>> parseColors(std::string str);
             std::string filterColors(std::string str);
             void resizePromptBuffer(std::size_t newSize);
+            void resizePromptHistory(std::size_t newSize);
 
             // Sketch functions
             inline sketchID addSketch(){sketchID res = this->nextSketchID++;this->sketches.insert({res,geometry::Sketch{}});return res;};

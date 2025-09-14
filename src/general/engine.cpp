@@ -171,6 +171,9 @@ void Engine::resizePromptBuffer(std::size_t newSize){
     this->promptBuffer = temp;
     this->promptSize = newSize;
 }
+void Engine::resizePromptHistory(std::size_t newHistory){
+    this->promptHistory.resize(newHistory);
+}
 void Engine::cliCommand(std::string command){
     if(command.size() > 0){
         std::queue<std::string> promptComponents;
@@ -199,7 +202,7 @@ void Engine::cliCommand(std::string command){
                     if(promptComponents.size() >= 2){
                         if(promptComponents.size() > 2){
                             std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_WARNING,"Error: Too many arguments provided for command set, ignoring extra arguments"}};
-                            this->promptHistory.add(msg);
+                            this->promptHistory.push(msg);
                         }
                         if(promptComponents.front() == "promptSize"){
                             promptComponents.pop();
@@ -207,23 +210,39 @@ void Engine::cliCommand(std::string command){
                                 int newSize = std::stoi(promptComponents.front());
                                 if(newSize < 20){
                                     std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_WARNING,"Prompt size too small, setting to 20 instead"}};
-                                    this->promptHistory.add(msg);
+                                    this->promptHistory.push(msg);
                                     newSize = 20;
                                 }
                                 this->resizePromptBuffer(newSize+1);
                                 std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_INFO,"Set promptSize to "+promptComponents.front()}};
-                                this->promptHistory.add(msg);
+                                this->promptHistory.push(msg);
                             }catch(std::exception e){
                                 std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Could not parse value for command set, aborting"}};
-                                this->promptHistory.add(msg);
+                                this->promptHistory.push(msg);
+                            }
+                        }else if(promptComponents.front() == "promptHistory"){
+                            promptComponents.pop();
+                            try{
+                                int newHistory = std::stoi(promptComponents.front());
+                                if(newHistory < 4){
+                                    std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_WARNING,"Prompt history too small, setting to 4 instead"}};
+                                    this->promptHistory.push(msg);
+                                    newHistory = 4;
+                                }
+                                this->resizePromptHistory(newHistory);
+                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_INFO,"Set promptHistory to "+promptComponents.front()}};
+                                this->promptHistory.push(msg);
+                            }catch(std::exception e){
+                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Could not parse value for command set, aborting"}};
+                                this->promptHistory.push(msg);
                             }
                         }else{
                             std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Unrecognized variable: "+promptComponents.front()+", aborting"}};
-                            this->promptHistory.add(msg);
+                            this->promptHistory.push(msg);
                         }
                     }else{
                         std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Not enough arguments provided for command set, aborting"}};
-                        this->promptHistory.add(msg);
+                        this->promptHistory.push(msg);
                     }
                 }break;
                 default:{
