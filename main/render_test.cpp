@@ -61,10 +61,10 @@ int main(){
         controlsList.emplace_back(ControlsInit{ButtonType::KEY,GLFW_KEY_ESCAPE,     pause});
     }
     const GLFWvidmode *vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-    NRA::VGL::Window window(800,800,"NRA vision GL test",controlsList);
+    
+    NRA::VGL::Controls controls{controlsList};
+    NRA::VGL::Window window(800,800,"NRA vision GL test",controls);
     NRA::VGL::FBO minimapFBO(vidMode->width,vidMode->height);
-    NRA::VGL::Controls &controls = window.getControls();
     window.makeCurrent();
     window.swapInterval(1);
 

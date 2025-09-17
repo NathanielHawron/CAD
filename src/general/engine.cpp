@@ -14,14 +14,44 @@ Engine::Color Engine::COLOR_ERROR = {1.0f,0.4f,0.4f};
 Engine::Color Engine::COLOR_WARNING = {0.9f,0.6f,0.4f};
 Engine::Color Engine::COLOR_INFO = {0.4f,0.6f,1.0f};
 
-Engine::Engine(std::string name, std::size_t promptSize, std::size_t promptHistoryCount):name{name},promptSize{promptSize},promptBuffer{new char[this->promptSize]},promptHistory{promptHistoryCount}{
+Viewport::Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height):
+visible{false},
+name{name},
+id{id},
+camera{glm::vec3{0.0f,0.0f,0.0f},glm::quat{glm::vec3{0.0f,0.0f,0.0f}},100.0f,this->projectionParams,controls},
+canvas{width, height, {NRA::VGL::FBO_flexible::texDescription::COLOR_TEX_2D_DESCRIPTION}, {NRA::VGL::FBO_flexible::rboDescription::DEPTH_STENCIL_RBO_DESCRIPTION}}{
+
+}
+
+Engine::Engine(std::string name, std::size_t promptSize, std::size_t promptHistoryCount):
+name{name},
+promptSize{promptSize},
+promptBuffer{new char[this->promptSize]},
+promptHistory{promptHistoryCount},
+mesh{sizeof(vertex)/4}{
     memset(this->promptBuffer, '\0', this->promptSize);
 }
 Engine::~Engine(){
     delete[] this->promptBuffer;
 }
+void Engine::renderWindowMenu(){
+
+}
+void Engine::renderWindows(){
+    if(this->renderWindowCLI){
+        this->cliWindow();
+    }
+    for(auto &vp : this->viewports){
+        if(vp.visible){
+            this->viewportWindow(vp);
+        }
+    }
+}
 void Engine::cliWindow(){
     
+}
+void Engine::viewportWindow(Viewport &vp){
+
 }
 void Engine::aboutWindow(){
     

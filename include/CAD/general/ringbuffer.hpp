@@ -94,7 +94,7 @@ namespace CAD{
             };
 
             RingBufferIterator<T> begin(){return RingBufferIterator<T>{this,0};};
-            RingBufferIterator<T> end(){return RingBufferIterator<T>{this,this->elements};};
+            RingBufferIterator<T> end(){return RingBufferIterator<T>{this,(int)this->elements};};
 
             RingBufferIterator<T> rbegin(){return RingBufferIterator<T>{this,this->elements-1};};
             RingBufferIterator<T> rend(){return RingBufferIterator<T>{this,-1};};

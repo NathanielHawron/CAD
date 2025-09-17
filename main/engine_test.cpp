@@ -1,3 +1,5 @@
+#include <list>
+
 #include "imgui/imgui.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
@@ -44,6 +46,10 @@ namespace TestControls{
     const NRA::VGL::ControlBind pause =         {false, 32};
 };
 
+struct OpenWindows{
+    bool cliWindow = false;
+};
+
 int main(){
     std::cout << "NRA_visionGL v" << (std::string)NRA_visionGL_VERSION << std::endl;
     std::cout << "CAD " << (std::string)CAD::LIB_VERSION << std::endl;
@@ -76,8 +82,17 @@ int main(){
 
         controlsList.emplace_back(ControlsInit{ButtonType::KEY, GLFW_KEY_Z,                 zoomIn});
         controlsList.emplace_back(ControlsInit{ButtonType::KEY, GLFW_KEY_X,                 zoomOut});
-
     }
+    std::array<NRA::VGL::ControlBind,17> cameraFPVControlBinds = {
+        TestControls::forwards,     TestControls::backwards,
+        TestControls::left,         TestControls::right,
+        TestControls::up,           TestControls::down,
+        TestControls::pitchUp,      TestControls::pitchDown,
+        TestControls::yawLeft,      TestControls::yawRight,
+        TestControls::rollLeft,     TestControls::rollRight,
+        TestControls::rotate,       TestControls::pan,          TestControls::zoom,
+        TestControls::zoomIn,       TestControls::zoomOut
+    };
     NRA::VGL::Window::init();
 
     // Init ImGui
@@ -89,19 +104,19 @@ int main(){
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     const GLFWvidmode *vidMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
+    
+    NRA::VGL::Controls controls{controlsList};
     std::string windowTitle = std::string("CAD test ") + (std::string)CAD::LIB_VERSION;
-    NRA::VGL::Window window(800,800,windowTitle.c_str(),controlsList);
+    NRA::VGL::Window window(800,800,windowTitle.c_str(),controls);
     NRA::VGL::FBO minimapFBO(vidMode->width,vidMode->height);
-    NRA::VGL::Controls &controls = window.getControls();
     window.makeCurrent();
     window.swapInterval(1);
-
+    
     // Setup ImGui backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
+    
     // OpenGL options
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -109,37 +124,47 @@ int main(){
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glClearColor(0.2f, 0.5f, 0.6f, 1.0f);
-
-    CAD::gui::EngineGUI engine{std::string{"Engine"}, 255, 5};
-
+    
+    std::list<CAD::gui::EngineGUI> engines;
+    std::size_t engineID = 0;
+    
     bool showAbout = false;
-
+    
     while(!window.shouldClose()){
         window.reset();
         NRA::VGL::Window::update();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
+        
         ImGuiViewport *viewport = ImGui::GetMainViewport();
         
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
-
+        
         ImGuiWindowFlags mainWindowFlags = ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar \
-                                            | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize \
-                                            | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus \
-                                            | ImGuiWindowFlags_NoNavFocus;
-
+        | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize \
+        | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus \
+        | ImGuiWindowFlags_NoNavFocus;
+        
         ImGui::Begin("Main Dockspace Window", nullptr, mainWindowFlags);
         ImGuiID dockspaceID = ImGui::GetID("Main Dockspace");
         ImGui::DockSpace(dockspaceID);
         ImGui::End();
-
+        
         ImGui::BeginMainMenuBar();
+        if(ImGui::BeginMenu("File")){
+            if(ImGui::MenuItem("New",nullptr,false)){
+                engines.emplace_back("New Engine "+std::to_string(engines.size()), std::to_string(engineID++), vidMode->width, vidMode->height, cameraFPVControlBinds);
+            }
+            // ImGui::MenuItem("Open",nullptr,nullptr,false);
+            // ImGui::MenuItem("Save",nullptr,nullptr,false);
+            // ImGui::MenuItem("Save As",nullptr,nullptr,false);
+            ImGui::EndMenu();
+        }
         if(ImGui::BeginMenu("Info")){
             ImGui::MenuItem("Documentation","",nullptr,true);
             if(ImGui::MenuItem("About","",nullptr,true)){
@@ -149,9 +174,17 @@ int main(){
         }
         ImGui::EndMainMenuBar();
 
-        engine.cliWindow();
+        ImGui::Begin("Open Files");
+        for(auto &engine : engines){
+            engine.renderWindowMenu();
+        }
+        ImGui::End();
+        for(auto &engine : engines){
+            engine.renderWindows();
+        }
+
         if(showAbout){
-            engine.aboutWindow();
+            CAD::gui::EngineGUI::aboutWindow();
         }
 
         ImGui::Render();
