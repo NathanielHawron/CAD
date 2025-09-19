@@ -1,7 +1,7 @@
 #include "CAD/general/version.hpp"
 
 
-constexpr CAD::Version CAD::LIB_VERSION{0,0,5,'a'};
+constexpr CAD::Version CAD::LIB_VERSION{0,0,6,'a'};
 
 std::string CAD::Version::toString() const{
     return "v" + std::to_string(this->MAJOR) + "." + std::to_string(this->MINOR) + "." + std::to_string(this->PATCH) + "-" + this->TAG;

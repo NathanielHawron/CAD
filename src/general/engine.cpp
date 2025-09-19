@@ -28,7 +28,7 @@ name{name},
 promptSize{promptSize},
 promptBuffer{new char[this->promptSize]},
 promptHistory{promptHistoryCount},
-mesh{sizeof(vertex)/4}{
+mesh{sizeof(geometry::Graph::Vertex)/4}{
     memset(this->promptBuffer, '\0', this->promptSize);
 }
 Engine::~Engine(){
@@ -281,4 +281,8 @@ void Engine::cliCommand(std::string command){
             }
         }
     }
+}
+
+void Engine::generateMesh(){
+    
 }

@@ -43,6 +43,7 @@ void EngineGUI::renderWindowMenu(){
     std::string label = this->name+"##"+this->id;
     std::string childRenderCLI = this->name+" cli##"+this->id;
     ImGui::BeginGroup();
+    // Render engine name / rename options
     if(this->rename){
         if(ImGui::InputText(label.c_str(),this->renameBuff,64,ImGuiInputTextFlags_EnterReturnsTrue)){
             this->rename = false;
@@ -59,8 +60,17 @@ void EngineGUI::renderWindowMenu(){
             memset(this->renameBuff,'\0',64);
             memcpy(this->renameBuff,this->name.c_str(),this->name.size());
         }
+        ImGui::SameLine();
+        if(ImGui::Button(("close##"+this->id).c_str())){
+            this->shouldClose = true;
+        }
+        if(ImGui::Button(("rebuild mesh##"+this->id).c_str())){
+            this->generateMesh();
+        }
     }
+    // CLI window option
     ImGui::Checkbox(childRenderCLI.c_str(),&this->renderWindowCLI);
+    // Render viewport menu
     int index = 0;
     for(auto &vp : this->viewports){
         if(index != this->renameVPIndex){

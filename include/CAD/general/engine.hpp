@@ -10,8 +10,10 @@
 #include "NRA_visionGL/frameBufferObject.h"
 #include "NRA_visionGL/mesh.h"
 
-#include "CAD/geometry/sketch.hpp"
 #include "CAD/general/ringbuffer.hpp"
+#include "CAD/geometry/sketch.hpp"
+#include "CAD/geometry/tree.hpp"
+#include "CAD/geometry/graph.hpp"
 
 
 namespace CAD{
@@ -30,12 +32,6 @@ namespace CAD{
             Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height);
             std::string getId()const{return this->id;};
         };
-        struct vertex{
-            GLfloat pos[3];
-            GLfloat norm[3];
-            GLfloat color[3];
-            GLfloat tex[2];
-        };
         using sketchID = std::size_t;
         class Engine{
         public:
@@ -48,6 +44,7 @@ namespace CAD{
         public:
             std::string name;
             bool renderWindowCLI = false;
+            bool shouldClose = false;
         protected:
             std::list<Viewport> viewports;
 
@@ -55,6 +52,7 @@ namespace CAD{
             char *promptBuffer;
             general::RingBuffer<std::vector<std::pair<Color, std::string>>> promptHistory;
 
+            geometry::Tree *tree;
             NRA::VGL::Mesh<GLuint> mesh;
 
             std::unordered_map<std::size_t, geometry::Sketch> sketches;
@@ -62,6 +60,8 @@ namespace CAD{
         public:
             Engine(std::string name, std::size_t promptSize = 255, std::size_t promptHistoryCount = 100);
             ~Engine();
+            // Checks equivelance based on pointer address
+            bool operator==(const Engine &e){return this == &e;};
             virtual void renderWindowMenu();
             void renderWindows();
             virtual void cliWindow();
@@ -73,6 +73,8 @@ namespace CAD{
             std::string filterColors(std::string str);
             void resizePromptBuffer(std::size_t newSize);
             void resizePromptHistory(std::size_t newSize);
+
+            void generateMesh();
 
             // Sketch functions
             inline sketchID addSketch(){sketchID res = this->nextSketchID++;this->sketches.insert({res,geometry::Sketch{}});return res;};

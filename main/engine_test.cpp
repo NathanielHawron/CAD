@@ -158,7 +158,7 @@ int main(){
         ImGui::BeginMainMenuBar();
         if(ImGui::BeginMenu("File")){
             if(ImGui::MenuItem("New",nullptr,false)){
-                engines.emplace_back("New Engine "+std::to_string(engines.size()), std::to_string(engineID++), vidMode->width, vidMode->height, cameraFPVControlBinds);
+                engines.emplace_back("New Engine "+std::to_string(engineID), std::to_string(engineID++), vidMode->width, vidMode->height, cameraFPVControlBinds);
             }
             // ImGui::MenuItem("Open",nullptr,nullptr,false);
             // ImGui::MenuItem("Save",nullptr,nullptr,false);
@@ -182,6 +182,9 @@ int main(){
         for(auto &engine : engines){
             engine.renderWindows();
         }
+        engines.remove_if([](const CAD::gui::EngineGUI &engine){
+            return engine.shouldClose;
+        });
 
         if(showAbout){
             CAD::gui::EngineGUI::aboutWindow();
