@@ -4,21 +4,24 @@
 
 #include "glm/glm.hpp"
 
+#include "CAD/geometry/volume.hpp"
+
 namespace CAD{
     namespace geometry{
-        struct Primative{
+        struct Primative : Volume{
             ~Primative() = default;
-            virtual std::unique_ptr<Primative> uniqueClone() const = 0;
         };
         struct Sphere : public Primative{
             glm::vec3 pos;
             float radius;
-            std::unique_ptr<Primative> uniqueClone() const override{
-                std::unique_ptr<Sphere> res = std::make_unique<Sphere>();
-                res->pos = this->pos;
-                res->radius = this->radius;
-                return res;
-            }
+
+            bool inside(glm::vec3 point) override;
+            glm::vec3 project(glm::vec3 origin, glm::vec3 ray) override;
+
+            Graph generateGraph() override;
+            Graph unionGraph(Volume *other) override;
+            Graph differenceGraph(Volume *other) override;
+            Graph intersectionGraph(Volume *other) override;
         };
     }
 }

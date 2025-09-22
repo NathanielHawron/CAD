@@ -10,7 +10,7 @@
 
 namespace CAD{
     namespace geometry{
-        class Graph : Volume{
+        class Graph : Volume {
             public:
             struct Face{
                 std::size_t p[3];
@@ -31,12 +31,16 @@ namespace CAD{
             bool faceIntersectsLine(std::size_t f0, std::size_t p0, std::size_t p1);
             bool faceIntersectsFace(std::size_t f0, std::size_t f1);
         public:
-            void CSGintersect(const Graph &g);
-            void CSGdifference(const Graph &g);
-            void CSGunion(const Graph &g);
-
             template <class I>
             void addToMesh(NRA::VGL::Mesh<I> &mesh) const;
+
+            bool inside(glm::vec3 point) override;
+            glm::vec3 project(glm::vec3 origin, glm::vec3 ray) override;
+            
+            Graph generateGraph() override;
+            Graph unionGraph(Volume *other) override;
+            Graph differenceGraph(Volume *other) override;
+            Graph intersectionGraph(Volume *other) override;
         };
     }
 }

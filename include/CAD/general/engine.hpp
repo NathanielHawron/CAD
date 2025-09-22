@@ -41,6 +41,7 @@ namespace CAD{
             static Color COLOR_ERROR;
             static Color COLOR_WARNING;
             static Color COLOR_INFO;
+            static Color COLOR_INFO2;
         public:
             std::string name;
             bool renderWindowCLI = false;
@@ -52,8 +53,8 @@ namespace CAD{
             char *promptBuffer;
             general::RingBuffer<std::vector<std::pair<Color, std::string>>> promptHistory;
 
-            geometry::Tree *tree;
-            NRA::VGL::Mesh<GLuint> mesh;
+            geometry::Tree tree;
+            NRA::VGL::Mesh<GLuint> *mesh;
 
             std::unordered_map<std::size_t, geometry::Sketch> sketches;
             sketchID nextSketchID;

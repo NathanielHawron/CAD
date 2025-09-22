@@ -7,12 +7,14 @@ using namespace CAD;
 using namespace general;
 
 std::unordered_map<std::string, std::size_t> commands = {
-    {"set", 0}
+    {"help",    0},
+    {"set",     1},
 };
 
 Engine::Color Engine::COLOR_ERROR = {1.0f,0.4f,0.4f};
 Engine::Color Engine::COLOR_WARNING = {0.9f,0.6f,0.4f};
 Engine::Color Engine::COLOR_INFO = {0.4f,0.6f,1.0f};
+Engine::Color Engine::COLOR_INFO2 = {0.4f,0.7f,0.9f};
 
 Viewport::Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height):
 visible{false},
@@ -28,11 +30,14 @@ name{name},
 promptSize{promptSize},
 promptBuffer{new char[this->promptSize]},
 promptHistory{promptHistoryCount},
-mesh{sizeof(geometry::Graph::Vertex)/4}{
+mesh{nullptr}{
     memset(this->promptBuffer, '\0', this->promptSize);
 }
 Engine::~Engine(){
     delete[] this->promptBuffer;
+    if(this->mesh != nullptr){
+        delete this->mesh;
+    }
 }
 void Engine::renderWindowMenu(){
 
@@ -223,12 +228,35 @@ void Engine::cliCommand(std::string command){
         
         auto commandName = commands.find(promptComponents.front());
         if(commandName == commands.end()){
-
+            // Not a recognized command, do nothing
         }else{
             std::size_t commandID = commandName->second;
             promptComponents.pop();
             switch(commandID){
-                case 0:{ // set
+                case 0:{ // Help
+                    std::string cmd = "";
+                    if(promptComponents.size() > 0){
+                        cmd = promptComponents.back();
+                        promptComponents.pop();
+                    }
+                    if(cmd == "" || cmd == "help"){
+                        {
+                            std::vector<std::pair<Engine::Color, std::string>> msg{
+                                {Engine::COLOR_INFO,"help <command>"},
+                                {Engine::COLOR_INFO2," - display help message for a command, or this message if empty or help"},
+                            };
+                            this->promptHistory.push(msg);
+                        }
+                        {
+                            std::vector<std::pair<Engine::Color, std::string>> msg{
+                                {Engine::COLOR_INFO,"set <parameter> <value>"},
+                                {Engine::COLOR_INFO2," - sets the value of a parameter"}
+                            };
+                            this->promptHistory.push(msg);
+                        }
+                    }
+                }break;
+                case 1:{ // set
                     if(promptComponents.size() >= 2){
                         if(promptComponents.size() > 2){
                             std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_WARNING,"Error: Too many arguments provided for command set, ignoring extra arguments"}};
@@ -275,6 +303,9 @@ void Engine::cliCommand(std::string command){
                         this->promptHistory.push(msg);
                     }
                 }break;
+                case 2:{
+
+                }break;
                 default:{
 
                 }
@@ -284,5 +315,10 @@ void Engine::cliCommand(std::string command){
 }
 
 void Engine::generateMesh(){
-    
+    if(this->mesh != nullptr){
+        delete this->mesh;
+    }
+    this->mesh = new NRA::VGL::Mesh{sizeof(geometry::Graph::Vertex)/4};
+
+    this->tree.generateGraph().addToMesh(*this->mesh);
 }

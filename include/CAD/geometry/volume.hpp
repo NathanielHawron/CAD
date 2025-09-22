@@ -1,13 +1,29 @@
 #pragma once
 
-#include <memory>
+#include "glm/glm.hpp"
 
+#include <memory>
+#include <cstdint>
 
 namespace CAD{
     namespace geometry{
+        class Graph;
         struct Volume{
             ~Volume() = default;
-            virtual std::unique_ptr<Volume> uniqueClone() const = 0;
+
+            // Checks if the point is inside the volume
+            virtual bool inside(glm::vec3 point) = 0;
+            // Calculates the point where the ray, starting from the origin, intersects the volume
+            virtual glm::vec3 project(glm::vec3 orgin, glm::vec3 ray) = 0;
+
+            // Generate a graph for the volume
+            virtual Graph generateGraph() = 0;
+            // Generate a graph that is the union of this and other (no duplicate volumes)
+            virtual Graph unionGraph(Volume *other) = 0;
+            // Generate a graph that is the difference between this and other, where other is subtracted from this
+            virtual Graph differenceGraph(Volume *other) = 0;
+            // Generate a graph that is the intersection of this and other
+            virtual Graph intersectionGraph(Volume *other) = 0;
         };
     }
 }

@@ -3,16 +3,6 @@
 using namespace CAD;
 using namespace geometry;
 
-void Graph::CSGintersect(const Graph &g){
-
-}
-void Graph::CSGdifference(const Graph &g){
-    
-}
-void Graph::CSGunion(const Graph &g){
-    
-}
-
 template <class I>
 void Graph::addToMesh(NRA::VGL::Mesh<I> &mesh) const {
     std::vector<Vertex> vertices;
@@ -28,6 +18,26 @@ void Graph::addToMesh(NRA::VGL::Mesh<I> &mesh) const {
             vertices.push_back({{p[i].pos.x,p[i].pos.y,p[i].pos.z},{norm.x,norm.y,norm.z},{p[i].color.x,p[i].color.y,p[i].color.z},{0.0f,0.0f}});
         }
     }
+}
+
+bool Graph::inside(glm::vec3 point){
+
+}
+glm::vec3 Graph::project(glm::vec3 origin, glm::vec3 ray){
+    
+}
+
+Graph Graph::generateGraph(){
+    
+}
+Graph Graph::unionGraph(Volume *other){
+    
+}
+Graph Graph::differenceGraph(Volume *other){
+    
+}
+Graph Graph::intersectionGraph(Volume *other){
+    
 }
 
 
