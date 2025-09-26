@@ -9,30 +9,42 @@
 #include "NRA_visionGL/controlCamera.h"
 #include "NRA_visionGL/frameBufferObject.h"
 #include "NRA_visionGL/mesh.h"
+#include "NRA_visionGL/shader.h"
+#include "NRA_visionGL/renderable.h"
 
 #include "CAD/general/ringbuffer.hpp"
 #include "CAD/geometry/sketch.hpp"
 #include "CAD/geometry/tree.hpp"
 #include "CAD/geometry/graph.hpp"
+#include "CAD/geometry/primative.hpp"
 
 
 namespace CAD{
     namespace general{
         class Viewport{
         public:
-            bool visible;
+            bool visible = false;
             bool ortho = false;
+            bool focus = false;
             std::string name;
             NRA::VGL::ProjectionParams projectionParams;
         private:
             std::string id;
             NRA::VGL::CameraOrbit camera;
             NRA::VGL::FBO_flexible canvas;
+            NRA::VGL::Shader &shader;
         public:
-            Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height);
+            Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height, NRA::VGL::Shader &shader);
             std::string getId()const{return this->id;};
+            void render(NRA::VGL::Renderable &r);
+            inline int getWidth(){return this->canvas.getWidth();};
+            inline int getHeight(){return this->canvas.getHeight();};
+            inline unsigned int getTex(){return this->canvas.getTex();};
+            inline unsigned int getTex(int8_t index){return this->canvas.getTex(index);};
+            inline void control(NRA::VGL::Controls &controls){this->camera.control(controls);};
         };
         using sketchID = std::size_t;
+        using sphereID = std::size_t;
         class Engine{
         public:
             struct Color{
@@ -48,6 +60,7 @@ namespace CAD{
             bool shouldClose = false;
         protected:
             std::list<Viewport> viewports;
+            std::size_t nextViewportID = 0;
 
             std::size_t promptSize;
             char *promptBuffer;
@@ -55,16 +68,20 @@ namespace CAD{
 
             geometry::Tree tree;
             NRA::VGL::Mesh<GLuint> *mesh;
+            NRA::VGL::Renderable renderable;
 
-            std::unordered_map<std::size_t, geometry::Sketch> sketches;
+            std::unordered_map<sketchID, geometry::Sketch> sketches;
             sketchID nextSketchID;
+
+            std::unordered_map<sketchID, geometry::Sphere> spheres;
+            sphereID nextSphereID;
         public:
             Engine(std::string name, std::size_t promptSize = 255, std::size_t promptHistoryCount = 100);
             ~Engine();
             // Checks equivelance based on pointer address
             bool operator==(const Engine &e){return this == &e;};
             virtual void renderWindowMenu();
-            void renderWindows();
+            void renderWindows(NRA::VGL::Controls &controls);
             virtual void cliWindow();
             virtual void viewportWindow(Viewport &vp);
             static void aboutWindow();
@@ -74,6 +91,8 @@ namespace CAD{
             std::string filterColors(std::string str);
             void resizePromptBuffer(std::size_t newSize);
             void resizePromptHistory(std::size_t newSize);
+
+            void addViewport(std::array<NRA::VGL::ControlBind, 17> controls, int width, int height, NRA::VGL::Shader &shader);
 
             void generateMesh();
 

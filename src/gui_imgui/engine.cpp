@@ -8,17 +8,37 @@
 using namespace CAD;
 using namespace gui;
 
-EngineGUI::EngineGUI(std::string name, std::string id, int width, int height, std::array<NRA::VGL::ControlBind, 17> controls, std::size_t promptSize, std::size_t promptHistoryCount):
+EngineGUI::EngineGUI(std::string name, std::string id, int width, int height, std::array<NRA::VGL::ControlBind, 17> controls, NRA::VGL::Shader &shader, std::size_t promptSize, std::size_t promptHistoryCount):
 Engine(name,promptSize,promptHistoryCount),
 id{id},
 width{width},
 height{height},
-controls{controls}{
+controls{controls},
+shader{shader}{
 }
 
 void EngineGUI::viewportWindow(general::Viewport &vp){
+    if(this->renderable.renderReady){
+        vp.render(this->renderable);
+    }
     std::string title = vp.name + "###VPW" + this->id+" "+vp.getId();
     ImGui::Begin(title.c_str());
+    vp.focus = ImGui::IsWindowHovered();
+
+    if(this->renderable.renderReady){
+        ImVec2 imageSize = ImVec2(vp.getWidth(), vp.getHeight());
+        ImVec2 windowSize = ImGui::GetContentRegionAvail();
+        ImVec2 dSize{imageSize.x-windowSize.x,imageSize.y-windowSize.y};
+        ImVec2 rdSize = {dSize.x / imageSize.x, dSize.y / imageSize.y};
+        ImGui::Image(
+            (ImTextureID)vp.getTex(),
+            windowSize,
+            ImVec2(rdSize.x*0.5f,1.0f-rdSize.y*0.5f),
+            ImVec2(1.0f-rdSize.x*0.5f,rdSize.y*0.5f)
+        );
+    }else{
+        ImGui::TextColored(ImVec4{1.0f,0.5f,0.5f,1.0f}, "No mesh to render");
+    }
 
     ImGui::End();
 }
@@ -103,8 +123,8 @@ void EngineGUI::renderWindowMenu(){
         }
         ++index;
     }
-    if(ImGui::Button(("+##"+this->id).c_str())){
-        this->viewports.emplace_back(std::string{"Viewport "}+std::to_string(this->viewports.size()),std::to_string(this->viewportID++),this->controls,this->width,this->height);
+    if(ImGui::Button(("Add Viewport##"+this->id).c_str())){
+        this->addViewport(this->controls, this->width, this->height, this->shader);
     }
     ImGui::EndGroup();
 }

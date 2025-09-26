@@ -31,36 +31,55 @@ void Tree::reset(){
     this->op = OPERATION::EMPTY;
 }
 
-template <class T>
-void Tree::operator+=(T *t){
-    new Tree(this);
-    this->right = t;
-    this->op = OPERATION::UNION;
+void Tree::operator+=(Volume *t){
+    if(this->left == nullptr){
+        this->left = t;
+    }else if(this->right == nullptr){
+        this->right = t;
+    }else{
+        new Tree(this);
+        this->right = t;
+        this->op = OPERATION::UNION;
+    }
 }
-template <class T>
-void Tree::operator-=(T *t){
-    new Tree(this);
+void Tree::operator-=(Volume *t){
+    if(this->left == nullptr){
+        return;
+    }else if(this->right != nullptr){
+        new Tree(this);
+    }
     this->right = t;
     this->op = OPERATION::DIFFERENCE;
 }
-template <class T>
-void Tree::operator*=(T *t){
-    new Tree(this);
+void Tree::operator*=(Volume *t){
+    if(this->left == nullptr){
+        return;
+    }else if(this->right != nullptr){
+        new Tree(this);
+    }
     this->right = t;
     this->op = OPERATION::INTERSECTION;
 }
 
 Graph Tree::generateGraph(){
-    switch(this->op){
-    case OPERATION::UNION:{
-        return this->left->unionGraph(this->right);
-    }break;
-    case OPERATION::DIFFERENCE:{
-        return this->left->differenceGraph(this->right);
-    };
-    case OPERATION::INTERSECTION:{
-        return this->left->intersectionGraph(this->right);
-    };
+    if(this->right == nullptr){
+        if(this->left == nullptr){
+            return Graph{};
+        }else{
+            return this->right->generateGraph();
+        }
+    }else{
+        switch(this->op){
+        case OPERATION::UNION:{
+            return this->left->unionGraph(this->right);
+        }break;
+        case OPERATION::DIFFERENCE:{
+            return this->left->differenceGraph(this->right);
+        };
+        case OPERATION::INTERSECTION:{
+            return this->left->intersectionGraph(this->right);
+        };
+        }
     }
 }
 

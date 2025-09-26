@@ -7,8 +7,9 @@ using namespace CAD;
 using namespace general;
 
 std::unordered_map<std::string, std::size_t> commands = {
-    {"help",    0},
-    {"set",     1},
+    {"help",        0},
+    {"set",         1},
+    {"primative",   2}
 };
 
 Engine::Color Engine::COLOR_ERROR = {1.0f,0.4f,0.4f};
@@ -16,13 +17,30 @@ Engine::Color Engine::COLOR_WARNING = {0.9f,0.6f,0.4f};
 Engine::Color Engine::COLOR_INFO = {0.4f,0.6f,1.0f};
 Engine::Color Engine::COLOR_INFO2 = {0.4f,0.7f,0.9f};
 
-Viewport::Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height):
-visible{false},
+Viewport::Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height, NRA::VGL::Shader &shader):
 name{name},
 id{id},
+projectionParams{(double)width/(double)height, NRA::VGL::ProjectionParams::horizontalFOV(90.0f, (double)width/(double)height)},
 camera{glm::vec3{0.0f,0.0f,0.0f},glm::quat{glm::vec3{0.0f,0.0f,0.0f}},100.0f,this->projectionParams,controls},
-canvas{width, height, {NRA::VGL::FBO_flexible::texDescription::COLOR_TEX_2D_DESCRIPTION}, {NRA::VGL::FBO_flexible::rboDescription::DEPTH_STENCIL_RBO_DESCRIPTION}}{
+canvas{width, height, {NRA::VGL::FBO_flexible::texDescription::COLOR_TEX_2D_DESCRIPTION}, {NRA::VGL::FBO_flexible::rboDescription::DEPTH_STENCIL_RBO_DESCRIPTION}},
+shader{shader}{
+}
+void Viewport::render(NRA::VGL::Renderable &r){
+    GLfloat meshColor[4] = {255.0f,0.0f,0.0f,255.0f};
+    glm::mat4 vpMat = glm::mat4(1.0f);
+    glm::mat4 mMat = glm::mat4(1.0f);//glm::translate(glm::scale(glm::mat4(1.0f),glm::vec3(0.5,0.5,0.5)),glm::vec3(1.25f,1.25f,1.25f));
+    this->camera.transformP(vpMat);
 
+    this->canvas.bind();
+    this->shader.bind();
+    this->shader.setUniform4<GLfloat>("U_Color", meshColor);
+    this->shader.setUniformMat<4>("U_vpMat", &vpMat[0][0]);
+    this->shader.setUniformMat<4>("U_mMat", &mMat[0][0]);
+    glClearColor(0.7f,0.7f,0.75f,1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    r.bindBuffers();
+    r.render();
+    this->canvas.unbind();
 }
 
 Engine::Engine(std::string name, std::size_t promptSize, std::size_t promptHistoryCount):
@@ -32,6 +50,8 @@ promptBuffer{new char[this->promptSize]},
 promptHistory{promptHistoryCount},
 mesh{nullptr}{
     memset(this->promptBuffer, '\0', this->promptSize);
+    this->renderable.init();
+    this->renderable.setVBOLayout(geometry::Graph::Vertex::layout);
 }
 Engine::~Engine(){
     delete[] this->promptBuffer;
@@ -42,11 +62,14 @@ Engine::~Engine(){
 void Engine::renderWindowMenu(){
 
 }
-void Engine::renderWindows(){
+void Engine::renderWindows(NRA::VGL::Controls &controls){
     if(this->renderWindowCLI){
         this->cliWindow();
     }
     for(auto &vp : this->viewports){
+        if(vp.focus){
+            vp.control(controls);
+        }
         if(vp.visible){
             this->viewportWindow(vp);
         }
@@ -56,7 +79,9 @@ void Engine::cliWindow(){
     
 }
 void Engine::viewportWindow(Viewport &vp){
-
+    if(this->renderable.renderReady){
+        vp.render(this->renderable);
+    }
 }
 void Engine::aboutWindow(){
     
@@ -254,6 +279,13 @@ void Engine::cliCommand(std::string command){
                             };
                             this->promptHistory.push(msg);
                         }
+                        {
+                            std::vector<std::pair<Engine::Color, std::string>> msg{
+                                {Engine::COLOR_INFO,"set <parameter> <value>"},
+                                {Engine::COLOR_INFO2," - sets the value of a parameter"}
+                            };
+                            this->promptHistory.push(msg);
+                        }
                     }
                 }break;
                 case 1:{ // set
@@ -314,11 +346,30 @@ void Engine::cliCommand(std::string command){
     }
 }
 
+void Engine::addViewport(std::array<NRA::VGL::ControlBind, 17> controls, int width, int height, NRA::VGL::Shader &shader){
+    this->viewports.emplace_back(std::string{"Viewport "}+std::to_string(this->viewports.size()),std::to_string(this->nextViewportID++), controls, width, height, shader);
+}
+
 void Engine::generateMesh(){
     if(this->mesh != nullptr){
         delete this->mesh;
     }
     this->mesh = new NRA::VGL::Mesh{sizeof(geometry::Graph::Vertex)/4};
 
+    geometry::Graph::Vertex vertices[4] = {
+        {{-0.5f, -0.5f, 0.0f}},
+        {{-0.5f,  0.5f, 0.0f}},
+        {{ 0.5f,  0.5f, 0.0f}},
+        {{ 0.5f, -0.5f, 0.0f}}
+    };
+    GLuint indices[6] = {
+        0,1,2,
+        0,2,3
+    };
+    this->mesh->add(vertices, indices, 4, 6);
+
     this->tree.generateGraph().addToMesh(*this->mesh);
+
+    this->renderable.loadMesh(*this->mesh);
+    this->renderable.renderReady = true;
 }

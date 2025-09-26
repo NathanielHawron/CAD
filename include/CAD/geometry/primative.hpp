@@ -8,7 +8,7 @@
 
 namespace CAD{
     namespace geometry{
-        struct Primative : Volume{
+        struct Primative : public Volume{
             ~Primative() = default;
         };
         struct Sphere : public Primative{

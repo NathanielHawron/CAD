@@ -3,6 +3,10 @@
 using namespace CAD;
 using namespace geometry;
 
+const NRA::VGL::VertexBufferLayout Graph::Vertex::layout{{
+    {GL_FLOAT, 3, GL_FALSE}
+}};
+
 template <class I>
 void Graph::addToMesh(NRA::VGL::Mesh<I> &mesh) const {
     std::vector<Vertex> vertices;
@@ -15,7 +19,7 @@ void Graph::addToMesh(NRA::VGL::Mesh<I> &mesh) const {
         glm::vec3 norm = glm::normalize(glm::cross(dp[0],dp[1]));
         for(uint_fast8_t i=0;i<3;++i){
             indices.push_back(vertices.size());
-            vertices.push_back({{p[i].pos.x,p[i].pos.y,p[i].pos.z},{norm.x,norm.y,norm.z},{p[i].color.x,p[i].color.y,p[i].color.z},{0.0f,0.0f}});
+            vertices.push_back({{p[i].pos.x,p[i].pos.y,p[i].pos.z}});//,{norm.x,norm.y,norm.z},{p[i].color.x,p[i].color.y,p[i].color.z},{0.0f,0.0f}});
         }
     }
 }

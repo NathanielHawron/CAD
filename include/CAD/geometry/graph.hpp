@@ -5,13 +5,14 @@
 #include "glm/glm.hpp"
 
 #include "NRA_visionGL/mesh.h"
+#include "NRA_visionGL/vertexBufferLayout.h"
 
 #include "CAD/geometry/volume.hpp"
 
 namespace CAD{
     namespace geometry{
-        class Graph : Volume {
-            public:
+        class Graph : public Volume {
+        public:
             struct Face{
                 std::size_t p[3];
             };
@@ -20,10 +21,8 @@ namespace CAD{
                 glm::vec3 color;
             };
             struct Vertex{
+                static const NRA::VGL::VertexBufferLayout layout;
                 GLfloat pos[3];
-                GLfloat norm[3];
-                GLfloat color[3];
-                GLfloat tex[2];
             };
         private:
             std::vector<Position> positions;

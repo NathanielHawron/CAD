@@ -34,12 +34,12 @@ namespace CAD{
             ~Tree();
             void reset();
 
-            template <class T>
-            void operator+=(T *t);
-            template <class T>
-            void operator-=(T *t);
-            template <class T>
-            void operator*=(T *t);
+            // Union operator
+            void operator+=(Volume *t);
+            // Difference opearator (Note: Does nothing to an empty tree)
+            void operator-=(Volume *t);
+            // Intersection operator (Note: Does nothing to an empty tree)
+            void operator*=(Volume *t);
 
             bool inside(glm::vec3 point) override;
             glm::vec3 project(glm::vec3 origin, glm::vec3 ray) override;

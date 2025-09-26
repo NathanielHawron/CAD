@@ -108,7 +108,6 @@ int main(){
     NRA::VGL::Controls controls{controlsList};
     std::string windowTitle = std::string("CAD test ") + (std::string)CAD::LIB_VERSION;
     NRA::VGL::Window window(800,800,windowTitle.c_str(),controls);
-    NRA::VGL::FBO minimapFBO(vidMode->width,vidMode->height);
     window.makeCurrent();
     window.swapInterval(1);
     
@@ -124,6 +123,15 @@ int main(){
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     glClearColor(0.2f, 0.5f, 0.6f, 1.0f);
+
+    std::filesystem::path shaderPath = std::filesystem::current_path().append("res/shaders/");
+    std::filesystem::path vertexPath = shaderPath;
+    std::filesystem::path fragmentPath = shaderPath;
+    std::string shaderName = "solid";
+    vertexPath.append(shaderName+"/"+shaderName+".vertex");
+    fragmentPath.append(shaderName+"/"+shaderName+".fragment");
+
+    NRA::VGL::Shader shader(vertexPath,fragmentPath);
     
     std::list<CAD::gui::EngineGUI> engines;
     std::size_t engineID = 0;
@@ -158,7 +166,7 @@ int main(){
         ImGui::BeginMainMenuBar();
         if(ImGui::BeginMenu("File")){
             if(ImGui::MenuItem("New",nullptr,false)){
-                engines.emplace_back("New Engine "+std::to_string(engineID), std::to_string(engineID++), vidMode->width, vidMode->height, cameraFPVControlBinds);
+                engines.emplace_back("New Engine "+std::to_string(engineID), std::to_string(engineID++), vidMode->width, vidMode->height, cameraFPVControlBinds, shader);
             }
             // ImGui::MenuItem("Open",nullptr,nullptr,false);
             // ImGui::MenuItem("Save",nullptr,nullptr,false);
@@ -178,9 +186,16 @@ int main(){
         for(auto &engine : engines){
             engine.renderWindowMenu();
         }
+
+
+        ImGui::BeginMainMenuBar();
+        bool menuTest;
+        ImGui::MenuItem("Menu Test Item", "", &menuTest);
+        ImGui::EndMainMenuBar();
+
         ImGui::End();
         for(auto &engine : engines){
-            engine.renderWindows();
+            engine.renderWindows(controls);
         }
         engines.remove_if([](const CAD::gui::EngineGUI &engine){
             return engine.shouldClose;
