@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <queue>
 #include <list>
 #include <string>
 #include <unordered_map>
@@ -14,7 +15,6 @@
 
 #include "CAD/general/ringbuffer.hpp"
 #include "CAD/geometry/sketch.hpp"
-#include "CAD/geometry/tree.hpp"
 #include "CAD/geometry/graph.hpp"
 #include "CAD/geometry/primative.hpp"
 
@@ -43,6 +43,7 @@ namespace CAD{
             inline unsigned int getTex(int8_t index){return this->canvas.getTex(index);};
             inline void control(NRA::VGL::Controls &controls){this->camera.control(controls);};
         };
+        using csgID = std::size_t;
         using sketchID = std::size_t;
         using sphereID = std::size_t;
         class Engine{
@@ -51,9 +52,34 @@ namespace CAD{
                 float r, g, b;
             };
             static Color COLOR_ERROR;
+            static Color COLOR_ERROR2;
             static Color COLOR_WARNING;
+            static Color COLOR_WARNING2;
             static Color COLOR_INFO;
             static Color COLOR_INFO2;
+            enum class VolumeType : uint8_t{
+                NONE = 0, CSG = 1,
+                // Primatives
+                SPHERE = 2
+            };
+            static const std::array<std::string, 3> VolumeType_string;
+            struct CSG{
+                enum class OP : uint8_t{
+                    // Note: Transform has a NONE in b
+                    TRANSFORM = 0,
+                    UNION = 1, DIFFERENCE = 2, INERSECTION = 3
+                };
+                static const std::array<std::string,4> OP_string;
+                OP op;
+                VolumeType aType;
+                std::size_t aIndex;
+                VolumeType bType;
+                std::size_t bIndex;
+
+                glm::mat4 transform = glm::mat4(1.0f);
+                
+                std::string toString() const;
+            };
         public:
             std::string name;
             bool renderWindowCLI = false;
@@ -66,15 +92,17 @@ namespace CAD{
             char *promptBuffer;
             general::RingBuffer<std::vector<std::pair<Color, std::string>>> promptHistory;
 
-            geometry::Tree tree;
             NRA::VGL::Mesh<GLuint> *mesh;
             NRA::VGL::Renderable renderable;
 
+            std::unordered_map<csgID, CSG> csgOperations;
+            csgID nextcsgID = 0;
+
             std::unordered_map<sketchID, geometry::Sketch> sketches;
-            sketchID nextSketchID;
+            sketchID nextSketchID = 0;
 
             std::unordered_map<sketchID, geometry::Sphere> spheres;
-            sphereID nextSphereID;
+            sphereID nextSphereID = 0;
         public:
             Engine(std::string name, std::size_t promptSize = 255, std::size_t promptHistoryCount = 100);
             ~Engine();
@@ -100,6 +128,26 @@ namespace CAD{
             inline sketchID addSketch(){sketchID res = this->nextSketchID++;this->sketches.insert({res,geometry::Sketch{}});return res;};
             inline geometry::Sketch *getSketch(sketchID id){return &this->sketches.at(id);};
             inline void removeSketch(sketchID id){this->sketches.erase(id);};
+
+            // CSG functions
+            inline csgID addCSG(CSG csg){
+                this->csgOperations.insert({this->nextcsgID, csg});
+                return this->nextcsgID++;
+            }
+
+            // Primative functions
+            inline sphereID addSphere(float radius, float x, float y, float z){
+                this->spheres[this->nextSphereID] = geometry::Sphere{radius, x, y, z};
+                return this->nextSphereID++;
+            }
+        private:
+            void cliCommandHelp(std::queue<std::string> &promptComponents);
+            void cliCommandSet(std::queue<std::string> &promptComponents);
+            void cliCommandSkip(std::queue<std::string> &promptComponents);
+            void cliCommandCSG(std::queue<std::string> &promptComponents, CSG::OP op);
+            void cliCommandCSGList(std::queue<std::string> &promptComponents);
+            void cliCommandTransform(std::queue<std::string> &promptComponents);
+            void cliCommandSphere(std::queue<std::string> &promptComponents);
         };
     }
 }

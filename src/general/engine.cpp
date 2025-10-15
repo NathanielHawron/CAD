@@ -1,21 +1,40 @@
 #include "CAD/general/engine.hpp"
 
-#include <queue>
 #include <unordered_map>
 
 using namespace CAD;
 using namespace general;
 
 std::unordered_map<std::string, std::size_t> commands = {
-    {"help",        0},
-    {"set",         1},
-    {"primative",   2}
+    {"help",            0},
+    {"set",             1},
+    {"skip",            2},
+    {"union",           3},
+    {"difference",      4},
+    {"intersection",    5},
+    {"transform",       6},
+    {"csg",             7},
+    {"sphere",          8}
 };
 
 Engine::Color Engine::COLOR_ERROR = {1.0f,0.4f,0.4f};
-Engine::Color Engine::COLOR_WARNING = {0.9f,0.6f,0.4f};
+Engine::Color Engine::COLOR_ERROR2 = {1.0f,0.5f,0.5f};
+Engine::Color Engine::COLOR_WARNING = {0.85f,0.65f,0.4f};
+Engine::Color Engine::COLOR_WARNING2 = {0.9f,0.6f,0.4f};
 Engine::Color Engine::COLOR_INFO = {0.4f,0.6f,1.0f};
 Engine::Color Engine::COLOR_INFO2 = {0.4f,0.7f,0.9f};
+
+const std::array<std::string,3> Engine::VolumeType_string = {
+    "NONE",
+    "CSG",
+    "SPHERE"
+};
+const std::array<std::string,4> Engine::CSG::OP_string = {
+    "TRANSFORM",
+    "UNION",
+    "DIFFERENCE",
+    "INTERSECTION"
+};
 
 Viewport::Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height, NRA::VGL::Shader &shader):
 name{name},
@@ -41,6 +60,16 @@ void Viewport::render(NRA::VGL::Renderable &r){
     r.bindBuffers();
     r.render();
     this->canvas.unbind();
+}
+
+std::string Engine::CSG::toString() const {
+    std::string a = VolumeType_string[(uint8_t)this->aType] + " " + std::to_string(this->aIndex);
+    if(this->op==OP::TRANSFORM){
+        return OP_string.at((uint8_t)this->op) + ": " + a;
+    }else{
+        std::string b = VolumeType_string[(uint8_t)this->bType] + " " + std::to_string(this->bIndex);
+        return OP_string.at((uint8_t)this->op) + ": " + a + (this->op==OP::UNION?"+":(this->op==OP::DIFFERENCE?"-":"*")) + b;
+    }
 }
 
 Engine::Engine(std::string name, std::size_t promptSize, std::size_t promptHistoryCount):
@@ -242,11 +271,11 @@ void Engine::cliCommand(std::string command){
             std::size_t index0 = 0;
             std::size_t index1 = command.find(" ");
             while(index1 != command.npos){
-                if(index1-index0 > 1){
+                if(index1-index0 > 0){
                     promptComponents.push(command.substr(index0,index1-index0));
                 }
                 index0 = index1+1;
-                index1 = command.find(" ", index0+1);
+                index1 = command.find(" ", index0);
             }
             promptComponents.push(command.substr(index0));
         }
@@ -258,85 +287,56 @@ void Engine::cliCommand(std::string command){
             std::size_t commandID = commandName->second;
             promptComponents.pop();
             switch(commandID){
-                case 0:{ // Help
-                    std::string cmd = "";
-                    if(promptComponents.size() > 0){
-                        cmd = promptComponents.back();
-                        promptComponents.pop();
-                    }
-                    if(cmd == "" || cmd == "help"){
-                        {
-                            std::vector<std::pair<Engine::Color, std::string>> msg{
-                                {Engine::COLOR_INFO,"help <command>"},
-                                {Engine::COLOR_INFO2," - display help message for a command, or this message if empty or help"},
-                            };
-                            this->promptHistory.push(msg);
-                        }
-                        {
-                            std::vector<std::pair<Engine::Color, std::string>> msg{
-                                {Engine::COLOR_INFO,"set <parameter> <value>"},
-                                {Engine::COLOR_INFO2," - sets the value of a parameter"}
-                            };
-                            this->promptHistory.push(msg);
-                        }
-                        {
-                            std::vector<std::pair<Engine::Color, std::string>> msg{
-                                {Engine::COLOR_INFO,"set <parameter> <value>"},
-                                {Engine::COLOR_INFO2," - sets the value of a parameter"}
-                            };
-                            this->promptHistory.push(msg);
-                        }
-                    }
+                case 0:{ // help
+                    this->cliCommandHelp(promptComponents);
                 }break;
                 case 1:{ // set
-                    if(promptComponents.size() >= 2){
-                        if(promptComponents.size() > 2){
-                            std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_WARNING,"Error: Too many arguments provided for command set, ignoring extra arguments"}};
-                            this->promptHistory.push(msg);
-                        }
-                        if(promptComponents.front() == "promptSize"){
-                            promptComponents.pop();
-                            try{
-                                int newSize = std::stoi(promptComponents.front());
-                                if(newSize < 20){
-                                    std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_WARNING,"Prompt size too small, setting to 20 instead"}};
-                                    this->promptHistory.push(msg);
-                                    newSize = 20;
-                                }
-                                this->resizePromptBuffer(newSize+1);
-                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_INFO,"Set promptSize to "+promptComponents.front()}};
-                                this->promptHistory.push(msg);
-                            }catch(std::exception e){
-                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Could not parse value for command set, aborting"}};
-                                this->promptHistory.push(msg);
-                            }
-                        }else if(promptComponents.front() == "promptHistory"){
-                            promptComponents.pop();
-                            try{
-                                int newHistory = std::stoi(promptComponents.front());
-                                if(newHistory < 4){
-                                    std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_WARNING,"Prompt history too small, setting to 4 instead"}};
-                                    this->promptHistory.push(msg);
-                                    newHistory = 4;
-                                }
-                                this->resizePromptHistory(newHistory);
-                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_INFO,"Set promptHistory to "+promptComponents.front()}};
-                                this->promptHistory.push(msg);
-                            }catch(std::exception e){
-                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Could not parse value for command set, aborting"}};
-                                this->promptHistory.push(msg);
-                            }
-                        }else{
-                            std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Unrecognized variable: "+promptComponents.front()+", aborting"}};
-                            this->promptHistory.push(msg);
-                        }
+                    this->cliCommandSet(promptComponents);
+                }break;
+                case 2:{ // skip
+
+                }break;
+                case 3:{ // union
+                    this->cliCommandCSG(promptComponents, CSG::OP::UNION);
+                }break;
+                case 4:{ // difference
+                    this->cliCommandCSG(promptComponents, CSG::OP::DIFFERENCE);
+                }break;
+                case 5:{ // intersection
+                    this->cliCommandCSG(promptComponents, CSG::OP::INERSECTION);
+                }break;
+                case 6:{ // transform
+                    this->cliCommandTransform(promptComponents);
+                }break;
+                case 7:{ // csg
+                    std::string cmd = promptComponents.front();
+                    promptComponents.pop();
+                    if(cmd == "list"){
+                        this->cliCommandCSGList(promptComponents);
                     }else{
-                        std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Not enough arguments provided for command set, aborting"}};
-                        this->promptHistory.push(msg);
+                        auto cmd2 = commands.find(cmd);
+                        switch(cmd2 == commands.end() ? 0 : cmd2->second){
+                            case 3:{ // union
+                                this->cliCommandCSG(promptComponents, CSG::OP::UNION);
+                            }break;
+                            case 4:{ // difference
+                                this->cliCommandCSG(promptComponents, CSG::OP::DIFFERENCE);
+                            }break;
+                            case 5:{ // intersection
+                                this->cliCommandCSG(promptComponents, CSG::OP::INERSECTION);
+                            }break;
+                            case 6:{ // transform
+                                this->cliCommandTransform(promptComponents);
+                            }break;
+                            default:{
+                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Unrecognized CSG operation, aborting"}};
+                                this->promptHistory.push(msg);
+                            }break;
+                        };
                     }
                 }break;
-                case 2:{
-
+                case 8:{ // sphere
+                    this->cliCommandSphere(promptComponents);
                 }break;
                 default:{
 
@@ -368,7 +368,9 @@ void Engine::generateMesh(){
     };
     this->mesh->add(vertices, indices, 4, 6);
 
-    this->tree.generateGraph().addToMesh(*this->mesh);
+    // @TODO: Generate actual mesh
+    std::unordered_map<csgID, geometry::Graph> csgRes;
+
 
     this->renderable.loadMesh(*this->mesh);
     this->renderable.renderReady = true;

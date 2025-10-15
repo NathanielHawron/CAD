@@ -30,6 +30,7 @@ namespace CAD{
             bool faceIntersectsLine(std::size_t f0, std::size_t p0, std::size_t p1);
             bool faceIntersectsFace(std::size_t f0, std::size_t f1);
         public:
+            ~Graph() = default;
             template <class I>
             void addToMesh(NRA::VGL::Mesh<I> &mesh) const;
 

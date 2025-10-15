@@ -76,9 +76,9 @@ int main(){
         controlsList.emplace_back(ControlsInit{ButtonType::KEY, GLFW_KEY_Q,                  rollLeft});
         controlsList.emplace_back(ControlsInit{ButtonType::KEY, GLFW_KEY_E,                  rollRight});
 
-        controlsList.emplace_back(ControlsInit{ButtonType::MOUSE,GLFW_MOUSE_BUTTON_MIDDLE,  rotate});
-        controlsList.emplace_back(ControlsInit{ButtonType::MOUSE,GLFW_MOUSE_BUTTON_LEFT,    pan});
-        controlsList.emplace_back(ControlsInit{ButtonType::MOUSE,GLFW_MOUSE_BUTTON_RIGHT,   zoom});
+        controlsList.emplace_back(ControlsInit{ButtonType::MOUSE, GLFW_MOUSE_BUTTON_RIGHT,  rotate});
+        controlsList.emplace_back(ControlsInit{ButtonType::MOUSE, GLFW_MOUSE_BUTTON_LEFT,   pan});
+        controlsList.emplace_back(ControlsInit{ButtonType::MOUSE, GLFW_MOUSE_BUTTON_MIDDLE, zoom});
 
         controlsList.emplace_back(ControlsInit{ButtonType::KEY, GLFW_KEY_Z,                 zoomIn});
         controlsList.emplace_back(ControlsInit{ButtonType::KEY, GLFW_KEY_X,                 zoomOut});

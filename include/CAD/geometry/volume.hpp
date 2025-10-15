@@ -2,6 +2,7 @@
 
 #include "glm/glm.hpp"
 
+#include <string>
 #include <memory>
 #include <cstdint>
 
@@ -10,6 +11,8 @@ namespace CAD{
         class Graph;
         struct Volume{
             ~Volume() = default;
+
+            virtual std::string toString() const {return "(string representation NYI)";};
 
             // Checks if the point is inside the volume
             virtual bool inside(glm::vec3 point) = 0;
