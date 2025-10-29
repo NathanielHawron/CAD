@@ -51,12 +51,9 @@ namespace CAD{
             struct Color{
                 float r, g, b;
             };
-            static Color COLOR_ERROR;
-            static Color COLOR_ERROR2;
-            static Color COLOR_WARNING;
-            static Color COLOR_WARNING2;
-            static Color COLOR_INFO;
-            static Color COLOR_INFO2;
+            static std::array<Color, 2> COLORS_ERROR;
+            static std::array<Color, 2> COLORS_WARNING;
+            static std::array<Color, 2> COLORS_INFO;
             enum class VolumeType : uint8_t{
                 NONE = 0, CSG = 1,
                 // Primatives

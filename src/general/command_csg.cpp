@@ -1,15 +1,15 @@
 #include "CAD/general/engine.hpp"
+#include "CAD/general/engine_macro.hpp"
 
 using namespace CAD;
 using namespace general;
 
 void Engine::cliCommandCSG(std::queue<std::string> &promptComponents, CSG::OP op){
     if(promptComponents.size() != 4){
-        std::vector<std::pair<Engine::Color, std::string>> msg{
-            {Engine::COLOR_ERROR,"Error:"},
-            {Engine::COLOR_ERROR2," expected 4 parameters for csg operation, got " + std::to_string(promptComponents.size())}
-        };
-        this->promptHistory.push(msg);
+        PUSH_MSG2(Engine::COLORS_ERROR,
+            "Error: ",
+            " expected 4 parameters for csg operation, got " + std::to_string(promptComponents.size())
+        )
         return;
     }
     std::string aType = promptComponents.front();
@@ -45,11 +45,10 @@ void Engine::cliCommandCSG(std::queue<std::string> &promptComponents, CSG::OP op
             }
         }
     }catch(std::exception e){
-        std::vector<std::pair<Engine::Color, std::string>> msg{
-            {Engine::COLOR_ERROR,"Error:"},
-            {Engine::COLOR_ERROR2," could not parse type"}
-        };
-        this->promptHistory.push(msg);
+        PUSH_MSG2(Engine::COLORS_ERROR,
+            "Error: ",
+            "Could not parse type"
+        )
         return;
     }
 
@@ -58,21 +57,17 @@ void Engine::cliCommandCSG(std::queue<std::string> &promptComponents, CSG::OP op
         ai = std::stoull(aIndex);
         bi = std::stoull(bIndex);
     }catch(std::exception e){
-        std::vector<std::pair<Engine::Color, std::string>> msg{
-            {Engine::COLOR_ERROR,"Error:"},
-            {Engine::COLOR_ERROR2," could not parse id"}
-        };
-        this->promptHistory.push(msg);
+        PUSH_MSG2(Engine::COLORS_ERROR,
+            "Error: ",
+            "Could not parse id"
+        )
         return;
     }
 
     csgID id = this->addCSG({op,at,ai,bt,bi});
     
-    {
-        std::vector<std::pair<Engine::Color, std::string>> msg{
-            {Engine::COLOR_INFO,"Added csg with id: "},
-            {Engine::COLOR_INFO2,std::to_string(id)}
-        };
-        this->promptHistory.push(msg);
-    }
+    PUSH_MSG2(Engine::COLORS_INFO,    
+        "Added csg with id: ",
+        std::to_string(id)
+    )
 }

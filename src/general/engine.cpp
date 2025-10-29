@@ -1,28 +1,64 @@
 #include "CAD/general/engine.hpp"
+#include "CAD/general/engine_macro.hpp"
 
 #include <unordered_map>
 
 using namespace CAD;
 using namespace general;
 
+#define GET_TYPE(type, index, csg, varName, f, s)                       \
+    switch(type){                                                       \
+        case Engine::VolumeType::NONE:{                                 \
+                                                                        \
+        }break;                                                         \
+        case Engine::VolumeType::CSG:{                                  \
+            auto it = csg.find(index);                                  \
+            if(it == csg.end()){                                        \
+                f;                                                      \
+            }else{                                                      \
+                geometry::Graph varName = it->second;                   \
+                s;                                                      \
+            }                                                           \
+        }break;                                                         \
+        case Engine::VolumeType::SPHERE:{                               \
+            auto it = this->spheres.find(index);                        \
+            if(it == this->spheres.end()){                              \
+                f;                                                      \
+            }else{                                                      \
+                geometry::Sphere varName = it->second;                  \
+                s;                                                      \
+            }                                                           \
+        }break;                                                         \
+    }
+
+constexpr std::size_t COMMAND_HELP_INDEX =          0;
+constexpr std::size_t COMMAND_CLEAR_INDEX =         1;
+constexpr std::size_t COMMAND_SET_INDEX =           2;
+constexpr std::size_t COMMAND_SKIP_INDEX =          3;
+constexpr std::size_t COMMAND_UNION_INDEX =         4;
+constexpr std::size_t COMMAND_DIFFERENCE_INDEX =    5;
+constexpr std::size_t COMMAND_INTERSECTION_INDEX =  6;
+constexpr std::size_t COMMAND_TRANSFORM_INDEX =     7;
+constexpr std::size_t COMMAND_CSG_INDEX =           8;
+constexpr std::size_t COMMAND_SPHERE_INDEX =        9;
+
+
 std::unordered_map<std::string, std::size_t> commands = {
-    {"help",            0},
-    {"set",             1},
-    {"skip",            2},
-    {"union",           3},
-    {"difference",      4},
-    {"intersection",    5},
-    {"transform",       6},
-    {"csg",             7},
-    {"sphere",          8}
+    {"help",            COMMAND_HELP_INDEX},
+    {"clear",           COMMAND_CLEAR_INDEX},
+    {"set",             COMMAND_SET_INDEX},
+    {"skip",            COMMAND_SKIP_INDEX},
+    {"union",           COMMAND_UNION_INDEX},
+    {"difference",      COMMAND_DIFFERENCE_INDEX},
+    {"intersection",    COMMAND_INTERSECTION_INDEX},
+    {"transform",       COMMAND_TRANSFORM_INDEX},
+    {"csg",             COMMAND_CSG_INDEX},
+    {"sphere",          COMMAND_SPHERE_INDEX}
 };
 
-Engine::Color Engine::COLOR_ERROR = {1.0f,0.4f,0.4f};
-Engine::Color Engine::COLOR_ERROR2 = {1.0f,0.5f,0.5f};
-Engine::Color Engine::COLOR_WARNING = {0.85f,0.65f,0.4f};
-Engine::Color Engine::COLOR_WARNING2 = {0.9f,0.6f,0.4f};
-Engine::Color Engine::COLOR_INFO = {0.4f,0.6f,1.0f};
-Engine::Color Engine::COLOR_INFO2 = {0.4f,0.7f,0.9f};
+std::array<Engine::Color, 2> Engine::COLORS_ERROR =     {Engine::Color{1.0f,0.4f,0.4f},      Engine::Color{1.0f,0.5f,0.5f}};
+std::array<Engine::Color, 2> Engine::COLORS_WARNING =   {Engine::Color{0.85f,0.65f,0.4f},    Engine::Color{0.9f,0.6f,0.4f}};
+std::array<Engine::Color, 2> Engine::COLORS_INFO =      {Engine::Color{0.4f,0.6f,1.0f},      Engine::Color{0.4f,0.7f,0.9f}};
 
 const std::array<std::string,3> Engine::VolumeType_string = {
     "NONE",
@@ -151,7 +187,7 @@ Engine::Color Engine::parseColorString(std::string str, Engine::Color defaultCol
         uint8_t colors[3] = {0,0,0};
         uint8_t colIndex = 0;
         std::string temp;
-        for(std::size_t i=0;i<col.size();++i){
+        for(std::size_t i=0;i<col.size() && colIndex < 3;++i){
             if(col.at(i) == ','){
                 if(colIndex <= 3){
                     for(int j=0;j<temp.size();++j){
@@ -287,28 +323,32 @@ void Engine::cliCommand(std::string command){
             std::size_t commandID = commandName->second;
             promptComponents.pop();
             switch(commandID){
-                case 0:{ // help
+                case COMMAND_HELP_INDEX:{
                     this->cliCommandHelp(promptComponents);
                 }break;
-                case 1:{ // set
+                case COMMAND_CLEAR_INDEX:{
+                    this->promptHistory.clear();
+                    PUSH_MSG1(COLORS_INFO[0], "Cleared");
+                }break;
+                case COMMAND_SET_INDEX:{
                     this->cliCommandSet(promptComponents);
                 }break;
-                case 2:{ // skip
-
+                case COMMAND_SKIP_INDEX:{
+                    this->cliCommandSkip(promptComponents);
                 }break;
-                case 3:{ // union
+                case COMMAND_UNION_INDEX:{
                     this->cliCommandCSG(promptComponents, CSG::OP::UNION);
                 }break;
-                case 4:{ // difference
+                case COMMAND_DIFFERENCE_INDEX:{
                     this->cliCommandCSG(promptComponents, CSG::OP::DIFFERENCE);
                 }break;
-                case 5:{ // intersection
+                case COMMAND_INTERSECTION_INDEX:{
                     this->cliCommandCSG(promptComponents, CSG::OP::INERSECTION);
                 }break;
-                case 6:{ // transform
+                case COMMAND_TRANSFORM_INDEX:{
                     this->cliCommandTransform(promptComponents);
                 }break;
-                case 7:{ // csg
+                case COMMAND_CSG_INDEX:{
                     std::string cmd = promptComponents.front();
                     promptComponents.pop();
                     if(cmd == "list"){
@@ -316,26 +356,28 @@ void Engine::cliCommand(std::string command){
                     }else{
                         auto cmd2 = commands.find(cmd);
                         switch(cmd2 == commands.end() ? 0 : cmd2->second){
-                            case 3:{ // union
+                            case COMMAND_UNION_INDEX:{
                                 this->cliCommandCSG(promptComponents, CSG::OP::UNION);
                             }break;
-                            case 4:{ // difference
+                            case COMMAND_DIFFERENCE_INDEX:{
                                 this->cliCommandCSG(promptComponents, CSG::OP::DIFFERENCE);
                             }break;
-                            case 5:{ // intersection
+                            case COMMAND_INTERSECTION_INDEX:{
                                 this->cliCommandCSG(promptComponents, CSG::OP::INERSECTION);
                             }break;
-                            case 6:{ // transform
+                            case COMMAND_TRANSFORM_INDEX:{
                                 this->cliCommandTransform(promptComponents);
                             }break;
                             default:{
-                                std::vector<std::pair<Engine::Color, std::string>> msg{{Engine::COLOR_ERROR,"Error: Unrecognized CSG operation, aborting"}};
-                                this->promptHistory.push(msg);
+                                PUSH_MSG2(COLORS_ERROR,
+                                    "Error: ",
+                                    "Unrecognized CSG operation, aborting"
+                                )
                             }break;
                         };
                     }
                 }break;
-                case 8:{ // sphere
+                case COMMAND_SPHERE_INDEX:{
                     this->cliCommandSphere(promptComponents);
                 }break;
                 default:{
@@ -367,9 +409,21 @@ void Engine::generateMesh(){
         0,2,3
     };
     this->mesh->add(vertices, indices, 4, 6);
-
+    std::cout << "Generating mesh: (" << this->csgOperations.size() << " CSG operations)" << std::endl;
     // @TODO: Generate actual mesh
     std::unordered_map<csgID, geometry::Graph> csgRes;
+    for(auto csgOp : this->csgOperations){
+        auto &csg = csgOp.second;
+        GET_TYPE(
+            csg.aType,csg.aIndex,csgRes,A,
+            std::cout << "Failed" << std::endl,
+            GET_TYPE(csg.bType,csg.bIndex,csgRes,B,
+                std::cout << "Failed" << std::endl,
+                std::cout << "Test" << std::endl
+            )
+        )
+        csgRes.insert({csgOp.first,{}});
+    }
 
 
     this->renderable.loadMesh(*this->mesh);

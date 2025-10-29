@@ -53,7 +53,7 @@ buildm: ./.bin/$(PROGRAM)
 # Run the executable file
 run: ./.bin/$(PROGRAM)
 	@echo -e "${GREEN}Running '${PROGRAM}'${NOCOLOR}"
-	./.bin/$(PROGRAM) $(ARGS)
+	cd ./.bin && ./$(PROGRAM) $(ARGS)
 	@echo -e "${GREEN}Finished Running '${PROGRAM}'${NOCOLOR}"
 
 # Clear intermediate files

@@ -1,6 +1,6 @@
-.bin
+.bin/imgui.ini
+.bin/*_test
 .o
-imgui.ini
 .vscode
 
 c_cpp_properties.json

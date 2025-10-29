@@ -92,6 +92,10 @@ namespace CAD{
             std::size_t size(){
                 return this->elements;
             };
+            void clear(){
+                this->beginIndex = 0;
+                this->elements = 0;
+            };
 
             RingBufferIterator<T> begin(){return RingBufferIterator<T>{this,0};};
             RingBufferIterator<T> end(){return RingBufferIterator<T>{this,(int)this->elements};};
