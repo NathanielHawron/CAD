@@ -30,7 +30,7 @@ buildo_g3: $(patsubst $(GUI_SRC)/%.cpp, ./.o/$(TARGET)/$(GUI)/%.o, $(wildcard $(
 	$(COMPILER) $< -o $@ -c $(INCLUDE) -D VERSION=$(VERSION) $(ARGS)
 	@echo -e "${GREEN}Built GUI ($(GUI)) objects${NOCOLOR}"
 
-buildo: reseto buildo_g1 buildo_g2 buildo_g3
+buildo: buildo_g1 buildo_g2 buildo_g3
 
 # Build library. If project is not a library, this can be blank.
 build: ./lib/$(PROJECT)_$(TARGET).a
@@ -42,10 +42,8 @@ build: ./lib/$(PROJECT)_$(TARGET).a
 	-@echo -e "${GREEN}Archived IPC Library${NOCOLOR}"
 
 # Build main file.
-./.bin:
-	@mkdir ./.bin
 buildm: ./.bin/$(PROGRAM)
-./.bin/$(PROGRAM): ./main/$(PROGRAM).cpp ./.bin ./lib/$(PROJECT)_$(TARGET).a
+./.bin/$(PROGRAM): ./main/$(PROGRAM).cpp ./lib/$(PROJECT)_$(TARGET).a
 	@echo -e "${GREEN}Building '${PROGRAM}'${CYAN}"
 	$(COMPILER) $(INCLUDE) -o ./.bin/$(PROGRAM) ./main/$(PROGRAM).cpp -l$(GUI)_$(TARGET) -l$(PROJECT)_$(TARGET) $(LIBRARY) -I ./main $(ARGS)
 	@echo -e "${GREEN}Built '${PROGRAM}'${NOCOLOR}"
