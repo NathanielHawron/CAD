@@ -389,7 +389,8 @@ void Engine::cliCommand(std::string command){
 }
 
 void Engine::addViewport(std::array<NRA::VGL::ControlBind, 17> controls, int width, int height, NRA::VGL::Shader &shader){
-    this->viewports.emplace_back(std::string{"Viewport "}+std::to_string(this->viewports.size()),std::to_string(this->nextViewportID++), controls, width, height, shader);
+    this->viewports.emplace_back(std::string{"Viewport "}+std::to_string(this->nextViewportID),std::to_string(this->nextViewportID), controls, width, height, shader);
+    ++this->nextViewportID;
 }
 
 void Engine::generateMesh(){

@@ -92,7 +92,10 @@ void EngineGUI::renderWindowMenu(){
     ImGui::Checkbox(childRenderCLI.c_str(),&this->renderWindowCLI);
     // Render viewport menu
     int index = 0;
-    for(auto &vp : this->viewports){
+    auto it = this->viewports.begin();
+    while(it != this->viewports.end()){
+        general::Viewport &vp = *it;
+        bool inc = true;
         if(index != this->renameVPIndex){
             std::string vpLabel = vp.name + "###VPCB" + this->id+" "+vp.getId();
             ImGui::Checkbox(vpLabel.c_str(),&vp.visible);
@@ -106,6 +109,8 @@ void EngineGUI::renderWindowMenu(){
             ImGui::SameLine();
             if(ImGui::Button(("delete##"+this->id+vp.getId()).c_str())){
                 this->renameVPIndex = -1;
+                it = this->viewports.erase(it);
+                inc = false;
             }
         }else{
             std::string vpLabel = "###VPCB" + this->id+" "+vp.getId();
@@ -122,6 +127,9 @@ void EngineGUI::renderWindowMenu(){
             }
         }
         ++index;
+        if(inc){
+            ++it;
+        }
     }
     if(ImGui::Button(("Add Viewport##"+this->id).c_str())){
         this->addViewport(this->controls, this->width, this->height, this->shader);
