@@ -17,17 +17,21 @@ namespace CAD{
         public:
             RingBufferIterator(RingBuffer<T> *rb, int index):rb{rb},index{index}{}
             T &operator*(){return this->rb->buff[(this->rb->beginIndex+this->index)%this->rb->maxElements];};
-            void operator++(){
+            RingBufferIterator<T> operator++(){
                 ++this->index;
+                return *this;
             };
-            void operator--(){
+            RingBufferIterator<T> operator--(){
                 --this->index;
+                return *this;
             }
-            void operator+=(int di){
+            RingBufferIterator<T> operator+=(int di){
                 this->index += di;
+                return *this;
             }
-            void operator-=(int di){
+            RingBufferIterator<T> operator-=(int di){
                 this->index -= di;
+                return *this;
             }
             bool operator==(const RingBufferIterator<T> &it) const {return this->index == it.index && this->rb == it.rb;};
             bool operator!=(const RingBufferIterator<T> &it) const {return this->index != it.index || this->rb != it.rb;};
@@ -70,18 +74,21 @@ namespace CAD{
                 delete[] this->buff;
                 this->buff = temp;
             }
-            void push(const T &element){
+            // Returns true if an element was overwritten
+            bool push_back(const T &element){
                 if(this->elements == this->maxElements){
                     this->buff[this->beginIndex] = element;
                     this->beginIndex = (this->beginIndex+1)%this->maxElements;
+                    return true;
                 }else{
                     this->buff[(this->beginIndex+this->elements)%this->maxElements] = element;
                     ++this->elements;
+                    return false;
                 }
             };
-            T pop(){
+            T pop_font(){
                 if(this->elements > 0){
-                    auto temp = this->beginIndex;
+                    T temp = this->buff[this->beginIndex];
                     this->beginIndex = (this->beginIndex+1)%this->maxElements;
                     --this->elements;
                     return temp;
@@ -89,9 +96,35 @@ namespace CAD{
                     return {};
                 }
             }
+            T front(){
+                if(this->elements > 0){
+                    return this->buff[this->beginIndex];
+                }else{
+                    return {};
+                }
+            }
+            T pop_back(){
+                if(this->elements > 0){
+                    T temp = this->buff[(this->beginIndex+this->elements-1)%this->maxElements];
+                    --this->elements;
+                    return temp;
+                }else{
+                    return {};
+                }
+            }
+            T back(){
+                if(this->elements > 0){
+                    return this->buff[(this->beginIndex+this->elements-1)%this->maxElements];
+                }else{
+                    return {};
+                }
+            }
             std::size_t size(){
                 return this->elements;
             };
+            std::size_t maxSize(){
+                return this->maxElements;
+            }
             void clear(){
                 this->beginIndex = 0;
                 this->elements = 0;

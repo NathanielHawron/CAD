@@ -8,8 +8,8 @@
 using namespace CAD;
 using namespace gui;
 
-EngineGUI::EngineGUI(std::string name, std::string id, int width, int height, std::array<NRA::VGL::ControlBind, 17> controls, NRA::VGL::Shader &shader, std::size_t promptSize, std::size_t promptHistoryCount):
-Engine(name,promptSize,promptHistoryCount),
+EngineGUI::EngineGUI(std::string name, std::string id, int width, int height, std::array<NRA::VGL::ControlBind, 17> controls, NRA::VGL::Shader &shader, std::size_t promptSize, std::size_t consoleSize, std::size_t promptHistoryCount):
+Engine(name,promptSize,consoleSize,promptHistoryCount),
 id{id},
 width{width},
 height{height},
@@ -137,12 +137,50 @@ void EngineGUI::renderWindowMenu(){
     ImGui::EndGroup();
 }
 
+template <class T>
+struct buffs{
+    general::RingBuffer<T> &rb;
+    general::RingBufferIterator<T> &it;
+    const std::size_t &size;
+    char *buff;
+    std::string &current;
+};
+int CLIKeyCallback(ImGuiInputTextCallbackData *data){
+    buffs<std::string> *b = (buffs<std::string>*)data->UserData;
+    if(data->EventKey == ImGuiKey_UpArrow){
+        if(b->it == b->rb.end()){
+            b->current = std::string(b->buff);
+        }else{
+            (*b->it) = std::string(b->buff);
+        }
+        if(b->it != b->rb.begin()){
+            --b->it;
+            memset(b->buff,'\0',b->size);
+            memcpy(b->buff,(*b->it).c_str(),std::min(b->size,(*b->it).size()));
+        }
+    }else if(data->EventKey == ImGuiKey_DownArrow){
+        if(b->it != b->rb.end()){
+            (*b->it) = std::string(b->buff);
+            ++b->it;
+            memset(b->buff,'\0',b->size);
+            if(b->it == b->rb.end()){
+                memcpy(b->buff,b->current.c_str(),std::min(b->size,b->current.size()));
+            }else{
+                memcpy(b->buff,(*b->it).c_str(),std::min(b->size,(*b->it).size()));
+            }
+        }
+    }
+    data->DeleteChars(0,data->BufTextLen);
+    data->InsertChars(0,b->buff);
+    return 0;
+}
+
 void EngineGUI::cliWindow(){
     ImGui::Begin((this->name+" CLI window###CLI"+this->id).c_str());
     ImVec2 size = ImGui::GetContentRegionAvail();
     ImGui::BeginChild((this->name+" CLI window history###"+this->id).c_str(),{size.x,size.y*0.9f});
     ImGui::NewLine();
-    for(std::vector<std::pair<Color,std::string>> line : this->promptHistory){
+    for(std::vector<std::pair<Color,std::string>> line : this->console){
         for(std::pair<Color, std::string> s : line){
             ImGui::SameLine();
             ImGui::TextColored(ImColor{s.first.r,s.first.g,s.first.b},s.second.c_str());
@@ -150,11 +188,20 @@ void EngineGUI::cliWindow(){
         ImGui::NewLine();
     }
     ImGui::EndChild();
-    if(ImGui::InputText((this->name+" CLI prompt").c_str(),this->promptBuffer,this->promptSize,ImGuiInputTextFlags_EnterReturnsTrue)){
+    static std::string current = "";
+    buffs<std::string> b = {
+        this->promptHistory,
+        this->promptHistoryIndex,
+        this->promptSize,
+        this->promptBuffer,
+        current
+    };
+    if(ImGui::InputText((this->name+" CLI prompt").c_str(),this->promptBuffer,this->promptSize,ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackHistory, CLIKeyCallback, &b)){
         std::string temp = std::string(this->promptBuffer);
-        this->promptHistory.push(this->parseColors(temp));
+        this->console.push_back(this->parseColors(temp));
         this->cliCommand(this->filterColors(temp));
         memset(this->promptBuffer, '\0', this->promptSize);
+        ImGui::SetKeyboardFocusHere(-1);
     }
     std::string promptSizeCount = std::to_string(std::string(this->promptBuffer).size()) + "/" + std::to_string(this->promptSize-1);
     ImGui::SameLine();

@@ -2,7 +2,7 @@
     std::vector<std::pair<Engine::Color, std::string>> msg{     \
         {Engine::col,str},                                      \
     };                                                          \
-    this->promptHistory.push(msg);                              \
+    this->console.push_back(msg);                               \
 }
 
 #define PUSH_MSG2(col, str1, str2)  {                           \
@@ -10,5 +10,5 @@
         {Engine::col[0],str1},                                  \
         {Engine::col[1],str2},                                  \
     };                                                          \
-    this->promptHistory.push(msg);                              \
+    this->console.push_back(msg);                               \
 }

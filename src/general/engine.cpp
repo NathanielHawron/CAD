@@ -2,6 +2,7 @@
 #include "CAD/general/engine_macro.hpp"
 
 #include <unordered_map>
+#include <chrono>
 
 using namespace CAD;
 using namespace general;
@@ -31,22 +32,30 @@ using namespace general;
         }break;                                                         \
     }
 
+constexpr std::size_t COMMAND_PRE_TIME_INDEX =      0;
+
 constexpr std::size_t COMMAND_HELP_INDEX =          0;
 constexpr std::size_t COMMAND_CLEAR_INDEX =         1;
-constexpr std::size_t COMMAND_SET_INDEX =           2;
-constexpr std::size_t COMMAND_SKIP_INDEX =          3;
-constexpr std::size_t COMMAND_UNION_INDEX =         4;
-constexpr std::size_t COMMAND_DIFFERENCE_INDEX =    5;
-constexpr std::size_t COMMAND_INTERSECTION_INDEX =  6;
-constexpr std::size_t COMMAND_TRANSFORM_INDEX =     7;
-constexpr std::size_t COMMAND_CSG_INDEX =           8;
-constexpr std::size_t COMMAND_SPHERE_INDEX =        9;
+constexpr std::size_t COMMAND_MESH_INDEX =          2;
+constexpr std::size_t COMMAND_SET_INDEX =           3;
+constexpr std::size_t COMMAND_GET_INDEX =           4;
+constexpr std::size_t COMMAND_SKIP_INDEX =          5;
+constexpr std::size_t COMMAND_UNION_INDEX =         6;
+constexpr std::size_t COMMAND_DIFFERENCE_INDEX =    7;
+constexpr std::size_t COMMAND_INTERSECTION_INDEX =  8;
+constexpr std::size_t COMMAND_TRANSFORM_INDEX =     9;
+constexpr std::size_t COMMAND_CSG_INDEX =           10;
+constexpr std::size_t COMMAND_SPHERE_INDEX =        11;
 
-
+std::unordered_map<std::string, std::size_t> commandPrefixes = {
+    {"time",            COMMAND_PRE_TIME_INDEX}
+};
 std::unordered_map<std::string, std::size_t> commands = {
     {"help",            COMMAND_HELP_INDEX},
     {"clear",           COMMAND_CLEAR_INDEX},
+    {"mesh",           COMMAND_CLEAR_INDEX},
     {"set",             COMMAND_SET_INDEX},
+    {"get",             COMMAND_GET_INDEX},
     {"skip",            COMMAND_SKIP_INDEX},
     {"union",           COMMAND_UNION_INDEX},
     {"difference",      COMMAND_DIFFERENCE_INDEX},
@@ -108,11 +117,13 @@ std::string Engine::CSG::toString() const {
     }
 }
 
-Engine::Engine(std::string name, std::size_t promptSize, std::size_t promptHistoryCount):
+Engine::Engine(std::string name, std::size_t promptSize, std::size_t consoleSize, std::size_t promptHistoryCount):
 name{name},
 promptSize{promptSize},
 promptBuffer{new char[this->promptSize]},
+console{consoleSize},
 promptHistory{promptHistoryCount},
+promptHistoryIndex{this->promptHistory.end()},
 mesh{nullptr}{
     memset(this->promptBuffer, '\0', this->promptSize);
     this->renderable.init();
@@ -296,11 +307,20 @@ void Engine::resizePromptBuffer(std::size_t newSize){
     this->promptBuffer = temp;
     this->promptSize = newSize;
 }
-void Engine::resizePromptHistory(std::size_t newHistory){
-    this->promptHistory.resize(newHistory);
+void Engine::resizeConsole(std::size_t newSize){
+    this->console.resize(newSize);
+}
+void Engine::resizePromptHistory(std::size_t newSize){
+    this->promptHistory.resize(newSize);
+    this->promptHistoryIndex = this->promptHistory.begin();
 }
 void Engine::cliCommand(std::string command){
     if(command.size() > 0){
+        if(this->promptHistory.back() != command){
+            this->promptHistory.push_back(command);
+        }
+        this->promptHistoryIndex = this->promptHistory.end();
+
         std::queue<std::string> promptComponents;
         // Split prompt
         {
@@ -316,6 +336,24 @@ void Engine::cliCommand(std::string command){
             promptComponents.push(command.substr(index0));
         }
         
+        bool benchmark = false;
+        auto start = std::chrono::high_resolution_clock::now();
+
+        auto prefix = commandPrefixes.find(promptComponents.front());
+        while(prefix != commandPrefixes.end()){
+            std::size_t prefixID = prefix->second;
+            switch(prefixID){
+                case COMMAND_PRE_TIME_INDEX:{
+                    benchmark = true;
+                }break;
+                default:{
+
+                }
+            }
+            promptComponents.pop();
+            prefix = commandPrefixes.find(promptComponents.front());
+        }
+
         auto commandName = commands.find(promptComponents.front());
         if(commandName == commands.end()){
             // Not a recognized command, do nothing
@@ -327,11 +365,17 @@ void Engine::cliCommand(std::string command){
                     this->cliCommandHelp(promptComponents);
                 }break;
                 case COMMAND_CLEAR_INDEX:{
-                    this->promptHistory.clear();
+                    this->console.clear();
                     PUSH_MSG1(COLORS_INFO[0], "Cleared");
+                }break;
+                case COMMAND_MESH_INDEX:{
+                    this->cliCommandMesh(promptComponents);
                 }break;
                 case COMMAND_SET_INDEX:{
                     this->cliCommandSet(promptComponents);
+                }break;
+                case COMMAND_GET_INDEX:{
+                    this->cliCommandGet(promptComponents);
                 }break;
                 case COMMAND_SKIP_INDEX:{
                     this->cliCommandSkip(promptComponents);
@@ -384,6 +428,15 @@ void Engine::cliCommand(std::string command){
 
                 }
             }
+        }
+        auto end = std::chrono::high_resolution_clock::now();
+        std::size_t runtime_us = std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
+
+        if(benchmark){
+            PUSH_MSG2(Engine::COLORS_INFO,
+                "Runtime: ",
+                std::to_string(runtime_us)+"us"
+            )
         }
     }
 }

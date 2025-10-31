@@ -87,7 +87,9 @@ namespace CAD{
 
             std::size_t promptSize;
             char *promptBuffer;
-            general::RingBuffer<std::vector<std::pair<Color, std::string>>> promptHistory;
+            general::RingBuffer<std::vector<std::pair<Color, std::string>>> console;
+            general::RingBuffer<std::string> promptHistory;
+            general::RingBufferIterator<std::string> promptHistoryIndex;
 
             NRA::VGL::Mesh<GLuint> *mesh;
             NRA::VGL::Renderable renderable;
@@ -101,7 +103,7 @@ namespace CAD{
             std::unordered_map<sketchID, geometry::Sphere> spheres;
             sphereID nextSphereID = 0;
         public:
-            Engine(std::string name, std::size_t promptSize = 255, std::size_t promptHistoryCount = 100);
+            Engine(std::string name, std::size_t promptSize = 256, std::size_t consoleSize = 100, std::size_t promptHistoryCount = 50);
             ~Engine();
             // Checks equivelance based on pointer address
             bool operator==(const Engine &e){return this == &e;};
@@ -115,6 +117,7 @@ namespace CAD{
             std::vector<std::pair<Color, std::string>> parseColors(std::string str);
             std::string filterColors(std::string str);
             void resizePromptBuffer(std::size_t newSize);
+            void resizeConsole(std::size_t newSize);
             void resizePromptHistory(std::size_t newSize);
 
             void addViewport(std::array<NRA::VGL::ControlBind, 17> controls, int width, int height, NRA::VGL::Shader &shader);
@@ -139,7 +142,9 @@ namespace CAD{
             }
         private:
             void cliCommandHelp(std::queue<std::string> &promptComponents);
+            void cliCommandMesh(std::queue<std::string> &promptComponents);
             void cliCommandSet(std::queue<std::string> &promptComponents);
+            void cliCommandGet(std::queue<std::string> &promptComponents);
             void cliCommandSkip(std::queue<std::string> &promptComponents);
             void cliCommandCSG(std::queue<std::string> &promptComponents, CSG::OP op);
             void cliCommandCSGList(std::queue<std::string> &promptComponents);

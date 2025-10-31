@@ -11,6 +11,9 @@ reseto:
 	-@mkdir ./.o/$(TARGET)/geometry
 	-@mkdir ./.o/$(TARGET)/$(GUI)
 
+resetl:
+	rm ./lib/lib$(PROJECT)_$(TARGET).a
+
 
 buildo_g1: $(patsubst ./src/general/%.cpp, ./.o/$(TARGET)/general/%.o, $(wildcard ./src/general/*.cpp))
 ./.o/$(TARGET)/general/%.o: ./src/general/%.cpp
