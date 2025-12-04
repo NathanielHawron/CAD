@@ -16,9 +16,10 @@ namespace CAD{
         struct Sphere : public Primative{
             float radius;
             glm::vec3 pos;
+            std::size_t subdivisions;
 
-            Sphere():radius{0.0f},pos{0.0f,0.0f,0.0f}{};
-            Sphere(float radius, float x, float y, float z):radius{radius},pos{x,y,z}{};
+            Sphere(std::size_t subdivisions = 10):radius{0.0f},pos{0.0f,0.0f,0.0f}{};
+            Sphere(float radius, float x, float y, float z, std::size_t subdivisions):radius{radius},pos{x,y,z},subdivisions{subdivisions}{};
             ~Sphere() = default;
 
             std::string toString() const override;
@@ -27,9 +28,14 @@ namespace CAD{
             glm::vec3 project(glm::vec3 origin, glm::vec3 ray) override;
 
             Graph generateGraph() override;
+
             Graph unionGraph(Volume *other) override;
             Graph differenceGraph(Volume *other) override;
             Graph intersectionGraph(Volume *other) override;
+            Graph transform(geometry::Transform t) override;
+            bool intersects(Volume *other) override;
+            bool encloses(Volume *other) override;
+            bool enclosed(Volume *other) override;
         };
     }
 }

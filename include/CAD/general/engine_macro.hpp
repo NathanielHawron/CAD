@@ -12,3 +12,4 @@
     };                                                          \
     this->console.push_back(msg);                               \
 }
+;

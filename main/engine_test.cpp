@@ -134,6 +134,7 @@ int main(){
     NRA::VGL::Shader shader(vertexPath,fragmentPath);
     
     std::list<CAD::gui::EngineGUI> engines;
+    CAD::general::Engine::startCin();
     std::size_t engineID = 0;
     
     bool showAbout = false;
@@ -195,8 +196,10 @@ int main(){
 
         ImGui::End();
         for(auto &engine : engines){
+            engine.cinCliCommand();
             engine.renderWindows(controls);
         }
+        CAD::gui::EngineGUI::nextCommand();
         engines.remove_if([](const CAD::gui::EngineGUI &engine){
             return engine.shouldClose;
         });

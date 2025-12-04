@@ -4,6 +4,9 @@
 #include <unordered_map>
 #include <chrono>
 
+#include <poll.h>
+#include <unistd.h>
+
 using namespace CAD;
 using namespace general;
 
@@ -30,6 +33,9 @@ using namespace general;
                 s;                                                      \
             }                                                           \
         }break;                                                         \
+        default:{                                                       \
+                                                                        \
+        };                                                              \
     }
 
 constexpr std::size_t COMMAND_PRE_TIME_INDEX =      0;
@@ -53,7 +59,7 @@ std::unordered_map<std::string, std::size_t> commandPrefixes = {
 std::unordered_map<std::string, std::size_t> commands = {
     {"help",            COMMAND_HELP_INDEX},
     {"clear",           COMMAND_CLEAR_INDEX},
-    {"mesh",           COMMAND_CLEAR_INDEX},
+    {"mesh",            COMMAND_MESH_INDEX},
     {"set",             COMMAND_SET_INDEX},
     {"get",             COMMAND_GET_INDEX},
     {"skip",            COMMAND_SKIP_INDEX},
@@ -68,10 +74,12 @@ std::unordered_map<std::string, std::size_t> commands = {
 std::array<Engine::Color, 2> Engine::COLORS_ERROR =     {Engine::Color{1.0f,0.4f,0.4f},      Engine::Color{1.0f,0.5f,0.5f}};
 std::array<Engine::Color, 2> Engine::COLORS_WARNING =   {Engine::Color{0.85f,0.65f,0.4f},    Engine::Color{0.9f,0.6f,0.4f}};
 std::array<Engine::Color, 2> Engine::COLORS_INFO =      {Engine::Color{0.4f,0.6f,1.0f},      Engine::Color{0.4f,0.7f,0.9f}};
+std::array<Engine::Color, 2> Engine::COLORS_SUCCESS =   {Engine::Color{0.1f,0.8f,0.2f},      Engine::Color{0.2f,0.9f,0.4f}};
 
-const std::array<std::string,3> Engine::VolumeType_string = {
+const std::array<std::string,4> Engine::VolumeType_string = {
     "NONE",
     "CSG",
+    "TRANSFORM",
     "SPHERE"
 };
 const std::array<std::string,4> Engine::CSG::OP_string = {
@@ -80,6 +88,11 @@ const std::array<std::string,4> Engine::CSG::OP_string = {
     "DIFFERENCE",
     "INTERSECTION"
 };
+
+std::queue<std::string> Engine::cli_cin{};
+std::thread *Engine::cli_cin_listener = nullptr;
+bool Engine::cli_cin_en = false;
+bool Engine::cli_cout_en = false;
 
 Viewport::Viewport(std::string name, std::string id, std::array<NRA::VGL::ControlBind,17> &controls, int width, int height, NRA::VGL::Shader &shader):
 name{name},
@@ -117,22 +130,62 @@ std::string Engine::CSG::toString() const {
     }
 }
 
-Engine::Engine(std::string name, std::size_t promptSize, std::size_t consoleSize, std::size_t promptHistoryCount):
+void listenCin(std::queue<std::string> &queue, bool &run){
+    pollfd p{};
+    p.fd = STDIN_FILENO;
+    p.events = POLLIN;
+
+    while(run){
+        int r = poll(&p, 1, 1000);
+        if(r > 0 && (p.revents & POLLIN)){
+            std::string s;
+            if(std::getline(std::cin, s)){
+                queue.push(s);
+            }
+        }
+    }
+}
+
+Engine::Engine(std::string name, std::size_t promptSize, std::size_t consoleSize, std::size_t promptHistoryCount, std::size_t subdivisions):
 name{name},
 promptSize{promptSize},
 promptBuffer{new char[this->promptSize]},
 console{consoleSize},
 promptHistory{promptHistoryCount},
 promptHistoryIndex{this->promptHistory.end()},
-mesh{nullptr}{
+mesh{nullptr},
+subdivisions{subdivisions}{
     memset(this->promptBuffer, '\0', this->promptSize);
     this->renderable.init();
     this->renderable.setVBOLayout(geometry::Graph::Vertex::layout);
 }
 Engine::~Engine(){
+    this->stopCin();
     delete[] this->promptBuffer;
     if(this->mesh != nullptr){
         delete this->mesh;
+    }
+}
+void Engine::startCin(){
+    if(Engine::cli_cin_listener == nullptr){
+        Engine::cli_cin_en = true;
+        Engine::cli_cin_listener = new std::thread(listenCin, std::ref(Engine::cli_cin), std::ref(Engine::cli_cin_en));
+    }
+}
+void Engine::stopCin(){
+    if(Engine::cli_cin_listener != nullptr){
+        Engine::cli_cin_en = false;
+        if(Engine::cli_cin_listener->joinable()){
+            Engine::cli_cin_listener->join();
+        }
+        delete Engine::cli_cin_listener;
+    }
+}
+void Engine::cinCliCommand(){
+    if(!Engine::cli_cin.empty()){
+        std::string temp = Engine::cli_cin.front();
+        this->console.push_back(this->parseColors(temp));
+        this->cliCommand(this->filterColors(temp));
     }
 }
 void Engine::renderWindowMenu(){
@@ -387,7 +440,7 @@ void Engine::cliCommand(std::string command){
                     this->cliCommandCSG(promptComponents, CSG::OP::DIFFERENCE);
                 }break;
                 case COMMAND_INTERSECTION_INDEX:{
-                    this->cliCommandCSG(promptComponents, CSG::OP::INERSECTION);
+                    this->cliCommandCSG(promptComponents, CSG::OP::INTERSECTION);
                 }break;
                 case COMMAND_TRANSFORM_INDEX:{
                     this->cliCommandTransform(promptComponents);
@@ -407,7 +460,7 @@ void Engine::cliCommand(std::string command){
                                 this->cliCommandCSG(promptComponents, CSG::OP::DIFFERENCE);
                             }break;
                             case COMMAND_INTERSECTION_INDEX:{
-                                this->cliCommandCSG(promptComponents, CSG::OP::INERSECTION);
+                                this->cliCommandCSG(promptComponents, CSG::OP::INTERSECTION);
                             }break;
                             case COMMAND_TRANSFORM_INDEX:{
                                 this->cliCommandTransform(promptComponents);
@@ -452,31 +505,59 @@ void Engine::generateMesh(){
     }
     this->mesh = new NRA::VGL::Mesh{sizeof(geometry::Graph::Vertex)/4};
 
-    geometry::Graph::Vertex vertices[4] = {
-        {{-0.5f, -0.5f, 0.0f}},
-        {{-0.5f,  0.5f, 0.0f}},
-        {{ 0.5f,  0.5f, 0.0f}},
-        {{ 0.5f, -0.5f, 0.0f}}
-    };
-    GLuint indices[6] = {
-        0,1,2,
-        0,2,3
-    };
-    this->mesh->add(vertices, indices, 4, 6);
-    std::cout << "Generating mesh: (" << this->csgOperations.size() << " CSG operations)" << std::endl;
+    PUSH_MSG2(COLORS_INFO,
+        "Generating Mesh",
+        "(" + std::to_string(this->csgOperations.size()) + " CSG operations)"
+    )
     // @TODO: Generate actual mesh
     std::unordered_map<csgID, geometry::Graph> csgRes;
     for(auto csgOp : this->csgOperations){
         auto &csg = csgOp.second;
-        GET_TYPE(
-            csg.aType,csg.aIndex,csgRes,A,
-            std::cout << "Failed" << std::endl,
-            GET_TYPE(csg.bType,csg.bIndex,csgRes,B,
-                std::cout << "Failed" << std::endl,
-                std::cout << "Test" << std::endl
+        if(csg.op == Engine::CSG::OP::TRANSFORM){
+            GET_TYPE(
+                csg.aType,csg.aIndex,csgRes,A,
+                std::cout << "Failed to find A" << std::endl,
+                {
+                    geometry::Transform t = this->transforms.at(csg.bIndex);
+                    if(csg.aType != Engine::VolumeType::CSG){
+                        csgRes.insert({csgOp.first,A.transform(t)});
+                    }else{
+                        csgRes.insert({csgOp.first,A.generateGraph().transform(t)});
+                    }
+                }
             )
-        )
-        csgRes.insert({csgOp.first,{}});
+        }else{
+            GET_TYPE(
+                csg.aType,csg.aIndex,csgRes,A,
+                std::cout << "Failed to find A" << std::endl,
+                GET_TYPE(
+                    csg.bType,csg.bIndex,csgRes,B,
+                    std::cout << "Failed to find B" << std::endl,
+                    {
+                        switch(csg.op){
+                            case CSG::OP::UNION:{
+                                csgRes.insert({csgOp.first,A.unionGraph(&B)});
+                                std::cout << "Union" << std::endl;
+                            }break;
+                            case CSG::OP::DIFFERENCE:{
+                                csgRes.insert({csgOp.first,A.differenceGraph(&B)});
+                                std::cout << "Difference" << std::endl;
+                            }break;
+                            case CSG::OP::INTERSECTION:{
+                                csgRes.insert({csgOp.first,A.intersectionGraph(&B)});
+                                std::cout << "Intersection" << std::endl;
+                            }break;
+                        }
+                    }
+                )
+            )
+        }
+    }
+
+    try{
+        csgRes.at(0).addToMesh(*this->mesh);
+    }catch(std::exception e){
+        PUSH_MSG2(Engine::COLORS_ERROR, "Error: ", e.what())
     }
 
 

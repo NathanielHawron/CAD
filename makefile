@@ -57,7 +57,28 @@ run: ./.bin/$(PROGRAM)
 	cd ./.bin && ./$(PROGRAM) $(ARGS)
 	@echo -e "${GREEN}Finished Running '${PROGRAM}'${NOCOLOR}"
 
+# Run the executable file with a pipe
+prun: ./.bin/$(PROGRAM)
+	@echo -e "${LBLUE}Creating fifos${NOCOLOR}"
+	-@mkfifo ./.bin/${PROGRAM}_fifo_in
+	-@mkfifo ./.bin/${PROGRAM}_fifo_out
+	@echo -e "${GREEN}Running '${PROGRAM}'${NOCOLOR}"
+	@echo "Starting" > ./.bin/engine_test_fifo_out
+	@cd ./.bin && (tail -f ./${PROGRAM}_fifo_in | (./$(PROGRAM) $(ARGS) &&  (> ./engine_test_fifo_in)) > ./${PROGRAM}_fifo_out)
+	@echo "Ending" > ./.bin/engine_test_fifo_out
+	@echo -e "${GREEN}Finished Running '${PROGRAM}'${NOCOLOR}"
+
 # Clear intermediate files
 clear:
 	rm ./lib/* -r
 	rm ./.o/* -r
+
+test:
+	echo "sphere add 1 0 0 0" > ./.bin/engine_test_fifo_in
+	> ./.bin/engine_test_fifo_in
+	sleep 1
+	echo "union sphere 0 sphere 0" > ./.bin/engine_test_fifo_in
+	> ./.bin/engine_test_fifo_in
+	sleep 1
+	echo "mesh build" > ./.bin/engine_test_fifo_in
+	> ./.bin/engine_test_fifo_in

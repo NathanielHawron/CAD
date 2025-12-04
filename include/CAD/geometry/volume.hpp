@@ -6,8 +6,11 @@
 #include <memory>
 #include <cstdint>
 
+#include "CAD/geometry/transform.hpp"
+
 namespace CAD{
     namespace geometry{
+        class Sphere;
         class Graph;
         struct Volume{
             ~Volume() = default;
@@ -21,12 +24,23 @@ namespace CAD{
 
             // Generate a graph for the volume
             virtual Graph generateGraph() = 0;
+
             // Generate a graph that is the union of this and other (no duplicate volumes)
             virtual Graph unionGraph(Volume *other) = 0;
             // Generate a graph that is the difference between this and other, where other is subtracted from this
             virtual Graph differenceGraph(Volume *other) = 0;
             // Generate a graph that is the intersection of this and other
             virtual Graph intersectionGraph(Volume *other) = 0;
+
+            // Generate a graph with transformed vertices
+            virtual Graph transform(geometry::Transform t) = 0;
+
+            // Check if volumes intersect (usefull to early kill or simplify operations)
+            virtual bool intersects(Volume *other) = 0;
+            // Check if other is completely inside or coincident
+            virtual bool encloses(Volume *other) = 0;
+            // Check if completely inside other or coincident
+            virtual bool enclosed(Volume *other) = 0;
         };
     }
 }

@@ -5,6 +5,7 @@
 #include <list>
 #include <string>
 #include <unordered_map>
+#include <thread>
 
 #include "NRA_visionGL/camera.h"
 #include "NRA_visionGL/controlCamera.h"
@@ -17,6 +18,7 @@
 #include "CAD/geometry/sketch.hpp"
 #include "CAD/geometry/graph.hpp"
 #include "CAD/geometry/primative.hpp"
+#include "CAD/geometry/transform.hpp"
 
 
 namespace CAD{
@@ -46,6 +48,7 @@ namespace CAD{
         using csgID = std::size_t;
         using sketchID = std::size_t;
         using sphereID = std::size_t;
+        using transformID = std::size_t;
         class Engine{
         public:
             struct Color{
@@ -54,17 +57,18 @@ namespace CAD{
             static std::array<Color, 2> COLORS_ERROR;
             static std::array<Color, 2> COLORS_WARNING;
             static std::array<Color, 2> COLORS_INFO;
+            static std::array<Color, 2> COLORS_SUCCESS;
             enum class VolumeType : uint8_t{
-                NONE = 0, CSG = 1,
+                NONE = 0, CSG, TRANSFORM,
                 // Primatives
-                SPHERE = 2
+                SPHERE
             };
-            static const std::array<std::string, 3> VolumeType_string;
+            static const std::array<std::string, 4> VolumeType_string;
             struct CSG{
                 enum class OP : uint8_t{
-                    // Note: Transform has a NONE in b
+                    // Note: Transform must have b type of TRANSFORM
                     TRANSFORM = 0,
-                    UNION = 1, DIFFERENCE = 2, INERSECTION = 3
+                    UNION, DIFFERENCE, INTERSECTION
                 };
                 static const std::array<std::string,4> OP_string;
                 OP op;
@@ -72,7 +76,7 @@ namespace CAD{
                 std::size_t aIndex;
                 VolumeType bType;
                 std::size_t bIndex;
-
+                
                 glm::mat4 transform = glm::mat4(1.0f);
                 
                 std::string toString() const;
@@ -81,30 +85,47 @@ namespace CAD{
             std::string name;
             bool renderWindowCLI = false;
             bool shouldClose = false;
-        protected:
+            protected:
             std::list<Viewport> viewports;
             std::size_t nextViewportID = 0;
-
+            
             std::size_t promptSize;
             char *promptBuffer;
             general::RingBuffer<std::vector<std::pair<Color, std::string>>> console;
             general::RingBuffer<std::string> promptHistory;
             general::RingBufferIterator<std::string> promptHistoryIndex;
-
+            
             NRA::VGL::Mesh<GLuint> *mesh;
             NRA::VGL::Renderable renderable;
-
+            
             std::unordered_map<csgID, CSG> csgOperations;
             csgID nextcsgID = 0;
-
+            
+            std::unordered_map<transformID, geometry::Transform> transforms;
+            transformID nextTransformID = 0;
+            
             std::unordered_map<sketchID, geometry::Sketch> sketches;
             sketchID nextSketchID = 0;
-
+            
             std::unordered_map<sketchID, geometry::Sphere> spheres;
             sphereID nextSphereID = 0;
+            std::size_t subdivisions;
+
+        private:
+            static std::queue<std::string> cli_cin;
+            static std::thread *cli_cin_listener;
+            static bool cli_cout_en;
+            static bool cli_cin_en;
+            
         public:
-            Engine(std::string name, std::size_t promptSize = 256, std::size_t consoleSize = 100, std::size_t promptHistoryCount = 50);
+            Engine(std::string name, std::size_t promptSize = 256, std::size_t consoleSize = 100, std::size_t promptHistoryCount = 50, std::size_t subdivisions = 10);
             ~Engine();
+            static void startCin();
+            static void stopCin();
+            static inline bool queryCinEn(){return Engine::cli_cin_en;};
+            static inline std::size_t queryCinSize(){return Engine::cli_cin.size();};
+            void cinCliCommand();
+            static inline void nextCommand(){if(!Engine::cli_cin.empty()){Engine::cli_cin.pop();}};
             // Checks equivelance based on pointer address
             bool operator==(const Engine &e){return this == &e;};
             virtual void renderWindowMenu();
@@ -134,10 +155,14 @@ namespace CAD{
                 this->csgOperations.insert({this->nextcsgID, csg});
                 return this->nextcsgID++;
             }
+            inline transformID addTransform(geometry::Transform t){
+                this->transforms.insert({this->nextTransformID, t});
+                return this->nextTransformID++;
+            }
 
             // Primative functions
             inline sphereID addSphere(float radius, float x, float y, float z){
-                this->spheres[this->nextSphereID] = geometry::Sphere{radius, x, y, z};
+                this->spheres[this->nextSphereID] = geometry::Sphere{radius, x, y, z, this->subdivisions};
                 return this->nextSphereID++;
             }
         private:

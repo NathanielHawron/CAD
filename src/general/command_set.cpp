@@ -8,9 +8,18 @@ using namespace CAD;
 using namespace general;
 
 void Engine::cliCommandSet(std::queue<std::string> &promptComponents){
-    const static std::array<std::string,3> integralParams = {"promptSize","consoleSize","promptHistory"};
-    const static std::array<std::size_t,3> integralMins = {32, 8, 1};
-    const static std::array<std::size_t,3> integralDefaults = {255, 100, 50};
+    const static std::array<std::string,4> integralParams = {
+        "promptSize","consoleSize","promptHistory",         // Console params
+        "subdivisions"                                      // Sphere params
+    };
+    const static std::array<std::size_t,4> integralMins = {
+        32, 8, 1,
+        3
+    };
+    const static std::array<std::size_t,4> integralDefaults = {
+        255, 100, 50,
+        10
+    };
     if(promptComponents.size() >= 2){
         if(promptComponents.size() > 2){
             PUSH_MSG2(Engine::COLORS_WARNING,
@@ -46,6 +55,9 @@ void Engine::cliCommandSet(std::queue<std::string> &promptComponents){
                     }break;
                     case 2:{    // Prompt History
                         this->resizePromptHistory(val);
+                    }break;
+                    case 3:{    // Subdivisions
+                        this->subdivisions = val;
                     }break;
                     default:{
         

@@ -8,8 +8,8 @@
 using namespace CAD;
 using namespace gui;
 
-EngineGUI::EngineGUI(std::string name, std::string id, int width, int height, std::array<NRA::VGL::ControlBind, 17> controls, NRA::VGL::Shader &shader, std::size_t promptSize, std::size_t consoleSize, std::size_t promptHistoryCount):
-Engine(name,promptSize,consoleSize,promptHistoryCount),
+EngineGUI::EngineGUI(std::string name, std::string id, int width, int height, std::array<NRA::VGL::ControlBind, 17> controls, NRA::VGL::Shader &shader, std::size_t promptSize, std::size_t consoleSize, std::size_t promptHistoryCount, std::size_t subdivisions):
+Engine(name,promptSize,consoleSize,promptHistoryCount,subdivisions),
 id{id},
 width{width},
 height{height},

@@ -23,6 +23,11 @@ void Engine::cliCommandGet(std::queue<std::string> &promptComponents){
                 "promptHistory: ",
                 std::to_string(this->promptHistory.maxSize())
             )
+        }else if(s == "subdivisions"){
+            PUSH_MSG2(Engine::COLORS_INFO,
+                "subdivisions: ",
+                std::to_string(this->subdivisions)
+            )
         }else{
             PUSH_MSG2(Engine::COLORS_WARNING,
                 "Warning: ",
