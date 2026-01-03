@@ -15,32 +15,33 @@ bool Graph::Position::isAlmostEqual(Position p, float e){
 
 template <class I>
 void Graph::addToMesh(NRA::VGL::Mesh<I> &mesh) const {
-    geometry::Graph::Vertex vertices[4] = {
-        {{-0.5f, -0.5f, 0.0f}},
-        {{-0.5f,  0.5f, 0.0f}},
-        {{ 0.5f,  0.5f, 0.0f}},
-        {{ 0.5f, -0.5f, 0.0f}}
-    };
-    I indices[6] = {
-        0,1,2,
-        0,2,3
-    };
-    mesh.add(vertices, indices, 4, 6);
+    // geometry::Graph::Vertex vertices[4] = {
+    //     {{-0.5f, -0.5f, 0.0f}},
+    //     {{-0.5f,  0.5f, 0.0f}},
+    //     {{ 0.5f,  0.5f, 0.0f}},
+    //     {{ 0.5f, -0.5f, 0.0f}}
+    // };
+    // I indices[6] = {
+    //     0,1,2,
+    //     0,2,3
+    // };
+    // mesh.add(vertices, indices, 4, 6);
 
-    // std::vector<Vertex> vertices;
-    // std::vector<I> indices;
-    // vertices.reserve(this->positions.size());
-    // indices.reserve(this->faces.size()*3);
-    /*for(const Face & face : this->faces){
+    std::vector<Graph::Vertex> vertices;
+    std::vector<I> indices;
+    vertices.reserve(this->positions.size());
+    indices.reserve(this->faces.size()*3);
+    for(const Face & face : this->faces){
         Position p[3] = {this->positions.at(face.p[0]),this->positions.at(face.p[1]),this->positions.at(face.p[2])};
-        glm::vec3 dp[2] = {p[0].pos-p[1].pos, p[1].pos-p[2].pos};
-        glm::vec3 norm = glm::normalize(glm::cross(dp[0],dp[1]));
-        for(uint_fast8_t i=0;i<3;++i){
-            indices.push_back(vertices.size());
-            vertices.push_back({{p[i].pos.x,p[i].pos.y,p[i].pos.z}});//,{norm.x,norm.y,norm.z},{p[i].color.x,p[i].color.y,p[i].color.z},{0.0f,0.0f}});
-        }
-    }*/
-    // mesh.add(vertices.data(),indices.data(),vertices.size(),indices.size());
+        indices.push_back(vertices.size()+0);
+        indices.push_back(vertices.size()+1);
+        indices.push_back(vertices.size()+2);
+        
+        vertices.push_back({{p[0].pos.x, p[0].pos.y, p[0].pos.z}});
+        vertices.push_back({{p[1].pos.x, p[1].pos.y, p[1].pos.z}});
+        vertices.push_back({{p[2].pos.x, p[2].pos.y, p[2].pos.z}});
+    }
+    mesh.add(vertices.data(),indices.data(),vertices.size(),indices.size());
 }
 void Graph::pushPos(Position p){
     this->positions.push_back(p);
@@ -87,7 +88,16 @@ Graph Graph::intersectionGraph(Volume *other){
     
 }
 Graph Graph::transform(geometry::Transform t){
-    
+    Graph res;
+    for(std::size_t i=0;i<this->positions.size();++i){
+        Position p = this->positions.at(i);
+        res.pushPos({glm::vec4(p.pos, 1.0) * t.m, p.color});
+    }
+    for(Face f : this->faces){
+        res.pushFace(f);
+    }
+
+    return res;
 }
 bool Graph::intersects(Volume *other){
 

@@ -14,7 +14,7 @@ void Engine::cliCommandSet(std::queue<std::string> &promptComponents){
     };
     const static std::array<std::size_t,4> integralMins = {
         32, 8, 1,
-        3
+        2
     };
     const static std::array<std::size_t,4> integralDefaults = {
         255, 100, 50,

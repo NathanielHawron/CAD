@@ -74,10 +74,16 @@ clear:
 	rm ./.o/* -r
 
 test:
+	echo "set subdivisions 4" > ./.bin/engine_test_fifo_in
+	> ./.bin/engine_test_fifo_in
+	sleep 1
 	echo "sphere add 1 0 0 0" > ./.bin/engine_test_fifo_in
 	> ./.bin/engine_test_fifo_in
 	sleep 1
-	echo "union sphere 0 sphere 0" > ./.bin/engine_test_fifo_in
+	echo "transform identity" > ./.bin/engine_test_fifo_in
+	> ./.bin/engine_test_fifo_in
+	sleep 1
+	echo "transform apply sphere 0 0" > ./.bin/engine_test_fifo_in
 	> ./.bin/engine_test_fifo_in
 	sleep 1
 	echo "mesh build" > ./.bin/engine_test_fifo_in

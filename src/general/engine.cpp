@@ -519,7 +519,7 @@ void Engine::generateMesh(){
                 std::cout << "Failed to find A" << std::endl,
                 {
                     geometry::Transform t = this->transforms.at(csg.bIndex);
-                    if(csg.aType != Engine::VolumeType::CSG){
+                    if(csg.aType == Engine::VolumeType::CSG){
                         csgRes.insert({csgOp.first,A.transform(t)});
                     }else{
                         csgRes.insert({csgOp.first,A.generateGraph().transform(t)});
